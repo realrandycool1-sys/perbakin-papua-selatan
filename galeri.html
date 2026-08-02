@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Galeri — PERBAKIN Papua Selatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div id="app-header"></div>
+
+<div class="page-header">
+  <div class="wrapper">
+    <div class="breadcrumb">
+      <a href="index.html">Beranda</a>
+      <span class="sep">/</span>
+      <span class="current">Galeri</span>
+    </div>
+    <h1>Galeri <em>Kegiatan</em></h1>
+    <p>Dokumentasi foto kegiatan, kejuaraan, dan pelatihan PERBAKIN Papua Selatan.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="wrapper">
+    <div class="filter-bar" id="filter-galeri">
+      <button class="filter-btn active" data-gal="all">Semua</button>
+      <button class="filter-btn" data-gal="Foto">Foto</button>
+      <button class="filter-btn" data-gal="Video">Video</button>
+    </div>
+    <div class="galeri-grid" id="galeri-grid" style="grid-template-columns: repeat(4, 1fr);"></div>
+  </div>
+</section>
+
+<div id="app-footer"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+mount('galeri');
+
+let currentFilter = 'all';
+function renderGaleri() {
+  let all = getData('galeri');
+  if (currentFilter !== 'all') all = all.filter(g => g.kategori === currentFilter);
+  if (all.length === 0) {
+    document.getElementById('galeri-grid').innerHTML = '<p class="text-muted text-center" style="grid-column: 1/-1; padding: 60px;">Belum ada foto dalam kategori ini.</p>';
+    return;
+  }
+  document.getElementById('galeri-grid').innerHTML = all.map(g => `
+    <div class="galeri-card" onclick="openLightbox(getData('galeri'), ${getData('galeri').findIndex(x => x.id === g.id)})">
+      <div class="galeri-pic ${g.pic}"></div>
+      <div class="galeri-card-body">
+        <div class="cat">📷 ${g.kategori}</div>
+        <h4>${g.judul}</h4>
+        <div class="text-xs text-muted" style="margin-top: 4px;">${formatDate(g.tanggal)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.querySelectorAll('#filter-galeri .filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#filter-galeri .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.gal;
+    renderGaleri();
+  });
+});
+
+renderGaleri();
+</script>
+</body>
+</html>

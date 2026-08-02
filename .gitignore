@@ -1,0 +1,22 @@
+# Dev scripts (Python utilities for data extraction)
+assets/*.py
+assets/*.txt
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Env
+.env
+.env.local

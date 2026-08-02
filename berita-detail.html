@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Detail Berita — PERBAKIN Papua Selatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.article-hero { aspect-ratio: 21/9; }
+.article-content { font-size: 17px; line-height: 1.8; color: var(--ink-mid); max-width: 720px; margin: 0 auto; }
+.article-content p { margin-bottom: 20px; }
+.article-content p:first-child::first-letter { font-family: 'DM Serif Display', serif; font-size: 56px; float: left; line-height: 1; margin: 8px 12px 0 0; color: var(--primary); }
+</style>
+</head>
+<body>
+
+<div id="app-header"></div>
+
+<div class="page-header" style="padding-bottom: 24px;">
+  <div class="wrapper" style="max-width: 800px;">
+    <div class="breadcrumb">
+      <a href="index.html">Beranda</a>
+      <span class="sep">/</span>
+      <a href="berita.html">Berita</a>
+      <span class="sep">/</span>
+      <span class="current" id="bc-current">Detail</span>
+    </div>
+  </div>
+</div>
+
+<article class="section" id="article-container" style="padding-top: 32px;"></article>
+
+<section class="section" style="background: var(--bg);">
+  <div class="wrapper">
+    <div class="section-head">
+      <h2>Berita Lainnya</h2>
+    </div>
+    <div class="news-grid" id="related-container"></div>
+  </div>
+</section>
+
+<div id="app-footer"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+mount('berita');
+
+const id = parseInt(getQueryParam('id'));
+const berita = getData('berita').find(b => b.id === id);
+
+if (!berita) {
+  document.getElementById('article-container').innerHTML = `
+    <div class="wrapper text-center" style="padding: 80px 24px;">
+      <h1 class="serif" style="font-size: 48px; margin-bottom: 16px;">Berita Tidak Ditemukan</h1>
+      <p class="text-muted">Berita yang kamu cari tidak ada atau sudah dihapus.</p>
+      <a href="berita.html" class="btn btn-primary mt-6">← Kembali ke Daftar Berita</a>
+    </div>
+  `;
+} else {
+  updateItem('berita', berita.id, { views: (berita.views || 0) + 1 });
+
+  document.title = berita.judul + ' — PERBAKIN Papua Selatan';
+  document.getElementById('bc-current').textContent = berita.judul.length > 40 ? berita.judul.substring(0, 40) + '...' : berita.judul;
+
+  const paragraphs = berita.content.split('\n').filter(p => p.trim());
+
+  document.getElementById('article-container').innerHTML = `
+    <div class="wrapper" style="max-width: 800px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <span class="tag tag-red">${berita.kategori}</span>
+        <h1 class="serif" style="font-size: 42px; line-height: 1.15; margin: 12px 0 16px; max-width: 700px; margin-left: auto; margin-right: auto;">${berita.judul}</h1>
+        <div class="text-muted text-sm">📅 ${formatDate(berita.tanggal)} &nbsp;·&nbsp; ✍️ Admin &nbsp;·&nbsp; 👁 <span id="view-count">${berita.views + 1}</span> dilihat</div>
+      </div>
+      <div class="article-hero ${berita.pic}" style="border-radius: 16px; margin-bottom: 40px;"></div>
+      <div class="article-content">
+        ${paragraphs.map(p => `<p>${p}</p>`).join('')}
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line);">
+        <span class="text-muted text-sm">Bagikan:</span>
+        <a href="#" onclick="event.preventDefault();showToast('Link disalin!','success')" class="btn btn-sm btn-outline">📋 Copy Link</a>
+        <a href="#" onclick="event.preventDefault();showToast('Share ke WhatsApp','success')" class="btn btn-sm btn-wa">💬 WhatsApp</a>
+        <a href="#" onclick="event.preventDefault();showToast('Share ke Facebook','success')" class="btn btn-sm btn-blue">f Facebook</a>
+      </div>
+    </div>
+  `;
+
+  const related = getData('berita').filter(b => b.kategori === berita.kategori && b.id !== berita.id).slice(0, 3);
+  const others = related.length >= 3 ? related : getData('berita').filter(b => b.id !== berita.id).slice(0, 3);
+
+  document.getElementById('related-container').innerHTML = others.map(b => `
+    <a href="berita-detail.html?id=${b.id}" class="news-card">
+      <div class="news-pic ${b.pic}">
+        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span></div>
+      </div>
+      <div class="news-body">
+        <div class="cat">${b.kategori}</div>
+        <h3>${b.judul}</h3>
+        <p>${b.excerpt}</p>
+        <div class="meta">📅 ${formatDate(b.tanggal)}</div>
+      </div>
+    </a>
+  `).join('');
+}
+</script>
+</body>
+</html>

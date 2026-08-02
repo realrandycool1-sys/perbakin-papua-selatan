@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — PERBAKIN Papua Selatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.empty-state { text-align: center; padding: 60px 24px; color: var(--muted); }
+.pic-preview { width: 60px; height: 50px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <div class="logo" style="flex-direction: column; gap: 16px;">
+      <img src="assets/logo.png" alt="PERBAKIN Papua Selatan" class="logo-img" style="height: 100px;" />
+      <div class="logo-text text-center">
+        <div class="logo-name">Admin Panel</div>
+        <div class="logo-sub">PERBAKIN Papua Selatan</div>
+      </div>
+    </div>
+    <h2>Login Admin</h2>
+    <p>Mode demo: gunakan username & password apa saja</p>
+    <form onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" class="form-input" id="login-user" value="admin" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" class="form-input" id="login-pass" value="admin" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">🔐 Login</button>
+    </form>
+    <p class="text-xs text-muted text-center mt-4">Demo mode · Data disimpan di browser (localStorage)</p>
+  </div>
+</div>
+
+<!-- ADMIN LAYOUT -->
+<div id="admin-layout" class="admin-layout" style="display: none;">
+  <aside class="admin-sidebar">
+    <a href="index.html" class="logo" style="margin-bottom: 8px;">
+      <img src="assets/logo.png" alt="PERBAKIN Papua Selatan" class="logo-img" />
+    </a>
+    <div style="padding: 0 14px 16px; border-bottom: 1px solid #1e293b; margin-bottom: 16px;">
+      <div class="logo-name" style="color: #fff; font-size: 13px;">Admin Panel</div>
+      <div class="logo-sub" style="color: rgba(255,255,255,0.5);">PERBAKIN Papua Selatan</div>
+    </div>
+    <nav class="admin-nav">
+      <a href="#" class="active" data-page="dashboard" onclick="showPage('dashboard')">📊 Dashboard</a>
+      <a href="#" data-page="berita" onclick="showPage('berita')">📰 Berita</a>
+      <a href="#" data-page="klub" onclick="showPage('klub')">🎯 Klub</a>
+      <a href="#" data-page="pengurus" onclick="showPage('pengurus')">👥 Pengurus</a>
+      <a href="#" data-page="pengumuman" onclick="showPage('pengumuman')">📢 Pengumuman</a>
+      <a href="#" data-page="galeri" onclick="showPage('galeri')">🖼️ Galeri</a>
+      <a href="#" data-page="kontak" onclick="showPage('kontak')">📞 Info Kontak</a>
+      <a href="#" data-page="pendaftar" onclick="showPage('pendaftar')">👤 Pendaftar</a>
+      <a href="#" data-page="pesan" onclick="showPage('pesan')">✉️ Pesan Masuk</a>
+      <a href="#" data-page="settings" onclick="showPage('settings')">⚙️ Pengaturan</a>
+      <a href="index.html" style="margin-top: 24px;">← Kembali ke Website</a>
+      <a href="#" onclick="doLogout()">🚪 Logout</a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <div id="admin-content"></div>
+  </main>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+let currentPage = 'dashboard';
+const PIC_OPTIONS = ['pic-grad-1', 'pic-grad-2', 'pic-grad-3', 'pic-grad-4', 'pic-grad-5', 'pic-grad-6', 'pic-grad-7', 'pic-grad-8'];
+
+function doLogin(e) {
+  e.preventDefault();
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-layout').style.display = 'grid';
+  showPage('dashboard');
+  showToast('Login berhasil!', 'success');
+}
+
+function doLogout() {
+  if (confirm('Yakin ingin logout?')) {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-layout').style.display = 'none';
+  }
+}
+
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.admin-nav a').forEach(a => a.classList.remove('active'));
+  const activeBtn = document.querySelector(`[data-page="${page}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const renderers = {
+    dashboard: renderDashboard,
+    berita: renderBeritaAdmin,
+    klub: renderKlubAdmin,
+    pengurus: renderPengurusAdmin,
+    pengumuman: renderPengumumanAdmin,
+    galeri: renderGaleriAdmin,
+    kontak: renderKontakAdmin,
+    pendaftar: renderPendaftarAdmin,
+    pesan: renderPesanAdmin,
+    settings: renderSettings
+  };
+  const fn = renderers[page] || renderDashboard;
+  document.getElementById('admin-content').innerHTML = fn();
+}
+
+// DASHBOARD
+function renderDashboard() {
+  const berita = getData('berita');
+  const klub = getData('klub');
+  const pengumuman = getData('pengumuman');
+  const pengurus = getData('pengurus');
+  const pendaftar = JSON.parse(localStorage.getItem('perbakin_pendaftar') || '[]');
+  const messages = JSON.parse(localStorage.getItem('perbakin_messages') || '[]');
+
+  const totalAtlet = klub.reduce((sum, k) => sum + k.atlet, 0);
+  const totalViews = berita.reduce((sum, b) => sum + (b.views || 0), 0);
+
+  return `
+    <div class="admin-header">
+      <h1>Dashboard</h1>
+      <div style="font-size: 13px; color: var(--muted);">Selamat datang di panel admin</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Total Berita</div>
+        <div class="num">${berita.length}</div>
+        <div class="change">↑ ${berita.length} published</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Klub</div>
+        <div class="num">${klub.length}</div>
+        <div class="change">${klub.filter(k => k.status === 'Aktif').length} aktif</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Atlet</div>
+        <div class="num">${totalAtlet}</div>
+        <div class="change">${klub.length} klub</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Views</div>
+        <div class="num">${totalViews}</div>
+        <div class="change">↑ Views artikel</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pendaftar Baru</div>
+        <div class="num">${pendaftar.length}</div>
+        <div class="change">${pendaftar.filter(p => p.status === 'Baru').length} perlu diproses</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pesan Masuk</div>
+        <div class="num">${messages.length}</div>
+        <div class="change">${messages.filter(m => m.status === 'Baru').length} belum dibaca</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pengurus</div>
+        <div class="num">${pengurus.length}</div>
+        <div class="change">Periode 2023-2027</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pengumuman</div>
+        <div class="num">${pengumuman.length}</div>
+        <div class="change">PDF aktif</div>
+      </div>
+    </div>
+
+    <div style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+      <h3 class="serif" style="font-size: 22px; margin-bottom: 8px; font-weight: 400;">👋 Selamat Datang di Admin Panel</h3>
+      <p style="font-size: 14px; opacity: 0.9;">Kelola berita, klub, pengurus, pengumuman, dan galeri dari sini. Semua perubahan akan tersimpan di browser dan langsung terlihat di website publik.</p>
+    </div>
+
+    <h3 style="font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 16px;">Berita Terbaru</h3>
+    <table class="admin-table">
+      <thead><tr><th>Gambar</th><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Views</th></tr></thead>
+      <tbody>
+        ${berita.slice(0, 5).map(b => `
+          <tr>
+            <td><div class="row-img ${b.pic}"></div></td>
+            <td><strong>${b.judul.substring(0, 50)}${b.judul.length > 50 ? '...' : ''}</strong></td>
+            <td><span class="tag tag-red-soft">${b.kategori}</span></td>
+            <td>${formatDate(b.tanggal)}</td>
+            <td>${b.views || 0}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// BERITA ADMIN
+function renderBeritaAdmin() {
+  const berita = getData('berita');
+  return `
+    <div class="admin-header">
+      <h1>Kelola Berita</h1>
+      <button class="btn btn-primary" onclick="formBerita()">+ Tambah Berita</button>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>Gambar</th><th>Judul</th><th>Kategori</th><th>Tanggal</th><th>Views</th><th>Aksi</th></tr></thead>
+      <tbody>
+        ${berita.length === 0 ? '<tr><td colspan="6" class="empty-state">Belum ada berita. Klik "+ Tambah Berita" untuk mulai.</td></tr>' : berita.map(b => `
+          <tr data-id="${b.id}">
+            <td><div class="row-img ${b.pic}"></div></td>
+            <td><strong>${b.judul.substring(0, 50)}${b.judul.length > 50 ? '...' : ''}</strong></td>
+            <td><span class="tag tag-red-soft">${b.kategori}</span></td>
+            <td>${formatDate(b.tanggal)}</td>
+            <td>${b.views || 0}</td>
+            <td>
+              <button class="btn btn-sm btn-outline" onclick="formBerita(${b.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="hapusItem('berita', ${b.id})">Hapus</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function formBerita(id = null) {
+  const item = id ? getData('berita').find(b => b.id === id) : {};
+  const content = `
+    <div class="modal-header">
+      <h3>${id ? 'Edit' : 'Tambah'} Berita</h3>
+      <button onclick="closeModal()" style="font-size: 24px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Judul *</label>
+        <input type="text" class="form-input" id="modal-judul" value="${item.judul || ''}" required>
+      </div>
+      <div class="form-group">
+        <label>Kategori *</label>
+        <select class="form-select" id="modal-kategori">
+          <option ${item.kategori === 'Kegiatan' ? 'selected' : ''}>Kegiatan</option>
+          <option ${item.kategori === 'Prestasi' ? 'selected' : ''}>Prestasi</option>
+          <option ${item.kategori === 'Pelatihan' ? 'selected' : ''}>Pelatihan</option>
+          <option ${item.kategori === 'Pengumuman' ? 'selected' : ''}>Pengumuman</option>
+          <option ${item.kategori === 'Regulasi' ? 'selected' : ''}>Regulasi</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tanggal *</label>
+        <input type="date" class="form-input" id="modal-tanggal" value="${item.tanggal || new Date().toISOString().split('T')[0]}" required>
+      </div>
+      <div class="form-group">
+        <label>Excerpt (Ringkasan) *</label>
+        <textarea class="form-textarea" id="modal-excerpt" style="min-height: 60px;" required>${item.excerpt || ''}</textarea>
+      </div>
+      <div class="form-group">
+        <label>Konten Lengkap *</label>
+        <textarea class="form-textarea" id="modal-content" required>${item.content || ''}</textarea>
+        <div class="form-hint">Pisahkan paragraf dengan baris kosong (enter 2x)</div>
+      </div>
+      <div class="form-group">
+        <label>Gambar Cover</label>
+        <select class="form-select" id="modal-pic">
+          ${PIC_OPTIONS.map(p => `<option value="${p}" ${item.pic === p ? 'selected' : ''}>${p.replace('pic-grad-', 'Gradient ')}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanBerita(${id || 'null'})">💾 Simpan</button>
+    </div>
+  `;
+  showModal(content);
+}
+
+function simpanBerita(id) {
+  const data = {
+    judul: document.getElementById('modal-judul').value,
+    kategori: document.getElementById('modal-kategori').value,
+    tanggal: document.getElementById('modal-tanggal').value,
+    excerpt: document.getElementById('modal-excerpt').value,
+    content: document.getElementById('modal-content').value,
+    pic: document.getElementById('modal-pic').value
+  };
+  if (!data.judul || !data.excerpt || !data.content) {
+    showToast('Lengkapi semua field wajib!', 'error');
+    return;
+  }
+  if (id) {
+    updateItem('berita', id, data);
+    showToast('Berita berhasil diperbarui!', 'success');
+  } else {
+    addItem('berita', data);
+    showToast('Berita berhasil ditambahkan!', 'success');
+  }
+  closeModal();
+  showPage('berita');
+}
+
+// KLUB ADMIN
+function renderKlubAdmin() {
+  const klub = getData('klub');
+  return `
+    <div class="admin-header">
+      <h1>Kelola Klub Menembak</h1>
+      <button class="btn btn-primary" onclick="formKlub()">+ Tambah Klub</button>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>Inisial</th><th>Nama</th><th>Kabupaten</th><th>Atlet</th><th>Kategori</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody>
+        ${klub.length === 0 ? '<tr><td colspan="7" class="empty-state">Belum ada klub.</td></tr>' : klub.map(k => `
+          <tr data-id="${k.id}">
+            <td><div class="row-img" style="background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700;">${k.singkatan.substring(0, 2)}</div></td>
+            <td><strong>${k.nama}</strong></td>
+            <td>${k.kabupaten}</td>
+            <td>${k.atlet}</td>
+            <td>${k.kategori}</td>
+            <td><span class="tag ${k.status === 'Aktif' ? 'tag-green' : 'tag-amber'}">${k.status}</span></td>
+            <td>
+              <button class="btn btn-sm btn-outline" onclick="formKlub(${k.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="hapusItem('klub', ${k.id})">Hapus</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function formKlub(id = null) {
+  const item = id ? getData('klub').find(k => k.id === id) : {};
+  const content = `
+    <div class="modal-header">
+      <h3>${id ? 'Edit' : 'Tambah'} Klub</h3>
+      <button onclick="closeModal()" style="font-size: 24px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nama Klub *</label>
+        <input type="text" class="form-input" id="modal-nama" value="${item.nama || ''}" required>
+      </div>
+      <div class="form-group">
+        <label>Singkatan *</label>
+        <input type="text" class="form-input" id="modal-singkatan" value="${item.singkatan || ''}" required>
+      </div>
+      <div class="form-group">
+        <label>Kabupaten *</label>
+        <select class="form-select" id="modal-kabupaten">
+          <option ${item.kabupaten === 'Merauke' ? 'selected' : ''}>Merauke</option>
+          <option ${item.kabupaten === 'Boven Digoel' ? 'selected' : ''}>Boven Digoel</option>
+          <option ${item.kabupaten === 'Mappi' ? 'selected' : ''}>Mappi</option>
+          <option ${item.kabupaten === 'Asmat' ? 'selected' : ''}>Asmat</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tahun Berdiri *</label>
+        <input type="number" class="form-input" id="modal-tahun" value="${item.tahun || 2020}" required>
+      </div>
+      <div class="form-group">
+        <label>Jumlah Atlet *</label>
+        <input type="number" class="form-input" id="modal-atlet" value="${item.atlet || 0}" required>
+      </div>
+      <div class="form-group">
+        <label>Jumlah Kategori Senjata *</label>
+        <input type="number" class="form-input" id="modal-kategori" value="${item.kategori || 1}" required>
+      </div>
+      <div class="form-group">
+        <label>Status *</label>
+        <select class="form-select" id="modal-status">
+          <option ${item.status === 'Aktif' ? 'selected' : ''}>Aktif</option>
+          <option ${item.status === 'Persiapan' ? 'selected' : ''}>Persiapan</option>
+          <option ${item.status === 'Non-aktif' ? 'selected' : ''}>Non-aktif</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Deskripsi</label>
+        <textarea class="form-textarea" id="modal-deskripsi">${item.deskripsi || ''}</textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanKlub(${id || 'null'})">💾 Simpan</button>
+    </div>
+  `;
+  showModal(content);
+}
+
+function simpanKlub(id) {
+  const data = {
+    nama: document.getElementById('modal-nama').value,
+    singkatan: document.getElementById('modal-singkatan').value,
+    kabupaten: document.getElementById('modal-kabupaten').value,
+    tahun: parseInt(document.getElementById('modal-tahun').value),
+    atlet: parseInt(document.getElementById('modal-atlet').value),
+    kategori: parseInt(document.getElementById('modal-kategori').value),
+    status: document.getElementById('modal-status').value,
+    deskripsi: document.getElementById('modal-deskripsi').value
+  };
+  if (!data.nama || !data.singkatan) {
+    showToast('Lengkapi field wajib!', 'error');
+    return;
+  }
+  if (id) {
+    updateItem('klub', id, data);
+    showToast('Klub berhasil diperbarui!', 'success');
+  } else {
+    addItem('klub', data);
+    showToast('Klub berhasil ditambahkan!', 'success');
+  }
+  closeModal();
+  showPage('klub');
+}
+
+// PENGURUS ADMIN
+function renderPengurusAdmin() {
+  const pengurus = getData('pengurus');
+  return `
+    <div class="admin-header">
+      <h1>Kelola Pengurus</h1>
+      <button class="btn btn-primary" onclick="formPengurus()">+ Tambah Pengurus</button>
+    </div>
+    <p class="text-muted" style="margin-bottom: 16px; font-size: 13px;">Total ${pengurus.length} pengurus. Gunakan filter atau tambah baru.</p>
+    <table class="admin-table">
+      <thead><tr><th>Group</th><th>Jabatan</th><th>Nama</th><th>Periode</th><th>Aksi</th></tr></thead>
+      <tbody>
+        ${pengurus.map(p => `
+          <tr data-id="${p.id}">
+            <td><span class="tag tag-blue-soft">${p.group || 'Lainnya'}</span></td>
+            <td>${p.jabatan}</td>
+            <td><strong>${p.nama}</strong>${p.isKetua ? ' <span class="tag tag-amber" style="margin-left: 6px;">⭐ Ketua</span>' : ''}</td>
+            <td>${p.periode || '-'}</td>
+            <td>
+              <button class="btn btn-sm btn-outline" onclick="formPengurus(${p.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="hapusItem('pengurus', ${p.id})">Hapus</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function formPengurus(id = null) {
+  const item = id ? getData('pengurus').find(p => p.id === id) : {};
+  showModal(`
+    <div class="modal-header"><h3>${id ? 'Edit' : 'Tambah'} Pengurus</h3><button onclick="closeModal()" style="font-size: 24px;">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Group / Bagian *</label>
+        <select class="form-select" id="modal-group">
+          <option ${item.group === 'Badan Pelindung' ? 'selected' : ''}>Badan Pelindung</option>
+          <option ${item.group === 'Badan Penasehat' ? 'selected' : ''}>Badan Penasehat</option>
+          <option ${item.group === 'Pengurus Inti' ? 'selected' : ''}>Pengurus Inti</option>
+          <option ${item.group === 'Bidang Tembak Sasaran' ? 'selected' : ''}>Bidang Tembak Sasaran</option>
+          <option ${item.group === 'Bidang Berburu' ? 'selected' : ''}>Bidang Berburu</option>
+          <option ${item.group === 'Bidang Tembak Reaksi' ? 'selected' : ''}>Bidang Tembak Reaksi</option>
+          <option ${item.group === 'Bidang Organisasi' ? 'selected' : ''}>Bidang Organisasi</option>
+          <option ${item.group === 'Komisi Kepelatihan & Perwasitan' ? 'selected' : ''}>Komisi Kepelatihan & Perwasitan</option>
+          <option ${item.group === 'Komisi Pembinaan Prestasi' ? 'selected' : ''}>Komisi Pembinaan Prestasi</option>
+          <option ${item.group === 'Bidang Sarana & Prasarana' ? 'selected' : ''}>Bidang Sarana & Prasarana</option>
+          <option ${item.group === 'Bidang Humas & Kemitraan' ? 'selected' : ''}>Bidang Humas & Kemitraan</option>
+          <option ${item.group === 'Bidang Usaha & Dana' ? 'selected' : ''}>Bidang Usaha & Dana</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Jabatan *</label><input type="text" class="form-input" id="modal-jabatan" value="${item.jabatan || ''}" required></div>
+      <div class="form-group"><label>Nama Lengkap *</label><input type="text" class="form-input" id="modal-nama" value="${item.nama || ''}" required></div>
+      <div class="form-group"><label>Periode</label><input type="text" class="form-input" id="modal-periode" value="${item.periode || '2023-2027'}"></div>
+      <div class="form-group">
+        <label><input type="checkbox" id="modal-isKetua" ${item.isKetua ? 'checked' : ''}> Tandai sebagai Ketua Umum (tampilkan foto)</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanPengurus(${id || 'null'})">💾 Simpan</button>
+    </div>
+  `);
+}
+
+function simpanPengurus(id) {
+  const data = {
+    group: document.getElementById('modal-group').value,
+    jabatan: document.getElementById('modal-jabatan').value,
+    nama: document.getElementById('modal-nama').value,
+    periode: document.getElementById('modal-periode').value,
+    isKetua: document.getElementById('modal-isKetua').checked
+  };
+  if (!data.jabatan || !data.nama) {
+    showToast('Lengkapi field!', 'error');
+    return;
+  }
+  if (id) {
+    updateItem('pengurus', id, data);
+    showToast('Pengurus diperbarui!', 'success');
+  } else {
+    addItem('pengurus', data);
+    showToast('Pengurus ditambahkan!', 'success');
+  }
+  closeModal();
+  showPage('pengurus');
+}
+
+// PENGUMUMAN ADMIN
+function renderPengumumanAdmin() {
+  const pengumuman = getData('pengumuman');
+  return `
+    <div class="admin-header">
+      <h1>Kelola Pengumuman</h1>
+      <button class="btn btn-primary" onclick="formPengumuman()">+ Tambah Pengumuman</button>
+    </div>
+    <table class="admin-table">
+      <thead><tr><th>Judul</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+      <tbody>
+        ${pengumuman.length === 0 ? '<tr><td colspan="3" class="empty-state">Belum ada pengumuman.</td></tr>' : pengumuman.map(p => `
+          <tr>
+            <td><strong>${p.judul.substring(0, 60)}${p.judul.length > 60 ? '...' : ''}</strong></td>
+            <td>${formatDate(p.tanggal)}</td>
+            <td>
+              <button class="btn btn-sm btn-outline" onclick="formPengumuman(${p.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="hapusItem('pengumuman', ${p.id})">Hapus</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function formPengumuman(id = null) {
+  const item = id ? getData('pengumuman').find(p => p.id === id) : {};
+  showModal(`
+    <div class="modal-header"><h3>${id ? 'Edit' : 'Tambah'} Pengumuman</h3><button onclick="closeModal()" style="font-size: 24px;">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Judul *</label><input type="text" class="form-input" id="modal-judul" value="${item.judul || ''}" required></div>
+      <div class="form-group"><label>Tanggal *</label><input type="date" class="form-input" id="modal-tanggal" value="${item.tanggal || new Date().toISOString().split('T')[0]}" required></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanPengumuman(${id || 'null'})">💾 Simpan</button>
+    </div>
+  `);
+}
+
+function simpanPengumuman(id) {
+  const data = {
+    judul: document.getElementById('modal-judul').value,
+    tanggal: document.getElementById('modal-tanggal').value
+  };
+  if (!data.judul) { showToast('Lengkapi field!', 'error'); return; }
+  if (id) {
+    updateItem('pengumuman', id, data);
+    showToast('Pengumuman diperbarui!', 'success');
+  } else {
+    addItem('pengumuman', data);
+    showToast('Pengumuman ditambahkan!', 'success');
+  }
+  closeModal();
+  showPage('pengumuman');
+}
+
+// GALERI ADMIN
+function renderGaleriAdmin() {
+  const galeri = getData('galeri');
+  return `
+    <div class="admin-header">
+      <h1>Kelola Galeri</h1>
+      <button class="btn btn-primary" onclick="formGaleri()">+ Tambah Foto</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+      ${galeri.length === 0 ? '<p class="empty-state" style="grid-column: 1/-1;">Belum ada foto.</p>' : galeri.map(g => `
+        <div style="background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid var(--line);">
+          <div class="galeri-pic ${g.pic}" style="aspect-ratio: 1;"></div>
+          <div style="padding: 12px;">
+            <div style="font-size: 11px; color: var(--muted);">${formatDate(g.tanggal)}</div>
+            <h4 style="font-size: 13px; margin: 4px 0 8px;">${g.judul}</h4>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-sm btn-outline" style="flex: 1;" onclick="formGaleri(${g.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="hapusItem('galeri', ${g.id})">Hapus</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function formGaleri(id = null) {
+  const item = id ? getData('galeri').find(g => g.id === id) : {};
+  showModal(`
+    <div class="modal-header"><h3>${id ? 'Edit' : 'Tambah'} Foto</h3><button onclick="closeModal()" style="font-size: 24px;">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Judul *</label><input type="text" class="form-input" id="modal-judul" value="${item.judul || ''}" required></div>
+      <div class="form-group"><label>Tanggal *</label><input type="date" class="form-input" id="modal-tanggal" value="${item.tanggal || new Date().toISOString().split('T')[0]}" required></div>
+      <div class="form-group"><label>Kategori *</label>
+        <select class="form-select" id="modal-kategori">
+          <option ${item.kategori === 'Foto' ? 'selected' : ''}>Foto</option>
+          <option ${item.kategori === 'Video' ? 'selected' : ''}>Video</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Gambar</label>
+        <select class="form-select" id="modal-pic">
+          ${PIC_OPTIONS.map(p => `<option value="${p}" ${item.pic === p ? 'selected' : ''}>${p.replace('pic-grad-', 'Gradient ')}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanGaleri(${id || 'null'})">💾 Simpan</button>
+    </div>
+  `);
+}
+
+function simpanGaleri(id) {
+  const data = {
+    judul: document.getElementById('modal-judul').value,
+    tanggal: document.getElementById('modal-tanggal').value,
+    kategori: document.getElementById('modal-kategori').value,
+    pic: document.getElementById('modal-pic').value
+  };
+  if (!data.judul) { showToast('Lengkapi field!', 'error'); return; }
+  if (id) {
+    updateItem('galeri', id, data);
+    showToast('Foto diperbarui!', 'success');
+  } else {
+    addItem('galeri', data);
+    showToast('Foto ditambahkan!', 'success');
+  }
+  closeModal();
+  showPage('galeri');
+}
+
+// KONTAK ADMIN
+function renderKontakAdmin() {
+  const k = getData('kontak');
+  return `
+    <div class="admin-header">
+      <h1>Kelola Info Kontak</h1>
+      <button class="btn btn-primary" onclick="formKontak()">✏️ Edit Info Kontak</button>
+    </div>
+    <p class="text-muted" style="margin-bottom: 24px; font-size: 13px;">Informasi kontak ini akan tampil di halaman <a href="kontak.html" target="_blank">Kontak</a> publik dan semua tombol WhatsApp di website.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+      ${Object.entries(k).map(([key, item]) => `
+        <div style="background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: flex; gap: 14px; align-items: start;">
+          <div style="width: 48px; height: 48px; border-radius: 10px; background: ${item.iconBg}; color: ${item.iconColor}; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">${item.icon}</div>
+          <div style="flex: 1;">
+            <div style="font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;">${item.label}</div>
+            <div style="font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px;">${item.judul}</div>
+            ${item.subjudul ? `<div style="font-size: 12px; color: var(--muted);">${item.subjudul}</div>` : ''}
+            ${item.nomor ? `<div style="font-size: 11px; color: var(--primary); margin-top: 6px; font-family: 'JetBrains Mono', monospace;">Nomor WA: ${item.nomor}</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="background: linear-gradient(135deg, #fef3e2 0%, #fff 100%); border: 1px solid var(--accent-soft); border-radius: 12px; padding: 20px; margin-top: 24px;">
+      <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">💡 Tips</h4>
+      <p style="font-size: 13px; color: var(--ink-mid); line-height: 1.6;">
+        · Untuk nomor WhatsApp, gunakan format internasional tanpa tanda + (contoh: <code>6281234567890</code>)<br/>
+        · Email akan otomatis jadi link mailto di halaman kontak<br/>
+        · Perubahan langsung tampil di website publik setelah disimpan
+      </p>
+    </div>
+  `;
+}
+
+function formKontak() {
+  const k = getData('kontak');
+  const items = ['sekretariat', 'whatsapp', 'email'];
+  const fields = items.map(key => {
+    const item = k[key];
+    return `
+      <div style="padding: 16px; background: var(--bg); border-radius: 10px; margin-bottom: 12px;">
+        <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">${item.icon}</span> ${item.label}
+        </h4>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label>Judul / Nilai Utama *</label>
+          <input type="text" class="form-input" id="kontak-${key}-judul" value="${item.judul.replace(/"/g, '&quot;')}" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label>Subjudul / Catatan</label>
+          <input type="text" class="form-input" id="kontak-${key}-subjudul" value="${(item.subjudul || '').replace(/"/g, '&quot;')}" placeholder="Misal: jam operasional, hari, dll">
+        </div>
+        ${key === 'whatsapp' ? `
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Nomor WhatsApp (format: 628xxxxxxxxxx)</label>
+          <input type="text" class="form-input" id="kontak-${key}-nomor" value="${item.nomor || ''}" placeholder="6281234567890">
+        </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
+  showModal(`
+    <div class="modal-header">
+      <h3>Edit Info Kontak</h3>
+      <button onclick="closeModal()" style="font-size: 24px;">✕</button>
+    </div>
+    <div class="modal-body">
+      ${fields}
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="simpanKontak()">💾 Simpan Semua</button>
+    </div>
+  `);
+}
+
+function simpanKontak() {
+  const items = ['sekretariat', 'whatsapp', 'email'];
+  const k = getData('kontak');
+  items.forEach(key => {
+    if (!k[key]) return;
+    const judul = document.getElementById(`kontak-${key}-judul`).value.trim();
+    const subjudul = document.getElementById(`kontak-${key}-subjudul`).value.trim();
+    if (!judul) {
+      showToast(`Field utama ${k[key].label} wajib diisi!`, 'error');
+      throw new Error('Required field empty');
+    }
+    k[key].judul = judul;
+    k[key].subjudul = subjudul;
+    if (key === 'whatsapp') {
+      const nomor = document.getElementById(`kontak-${key}-nomor`).value.trim();
+      if (nomor) k[key].nomor = nomor;
+    }
+  });
+  setData('kontak', k);
+  showToast('Info kontak berhasil diperbarui!', 'success');
+  closeModal();
+  showPage('kontak');
+}
+
+// PENDAFTAR
+function renderPendaftarAdmin() {
+  const pendaftar = JSON.parse(localStorage.getItem('perbakin_pendaftar') || '[]');
+  return `
+    <div class="admin-header">
+      <h1>Pendaftar Baru</h1>
+      <span class="text-muted text-sm">${pendaftar.length} pendaftar</span>
+    </div>
+    ${pendaftar.length === 0 ? '<p class="empty-state">Belum ada pendaftar. Silakan tes dari halaman <a href="pendaftaran.html">Pendaftaran</a>.</p>' : `
+      <table class="admin-table">
+        <thead><tr><th>Tanggal</th><th>Nama</th><th>Domisili</th><th>Klub</th><th>Kategori</th><th>WhatsApp</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${pendaftar.map(p => `
+            <tr>
+              <td>${formatDate(p.tanggal.split('T')[0])}</td>
+              <td><strong>${p.nama}</strong></td>
+              <td>${p.domisili}</td>
+              <td>${p.klub}</td>
+              <td>${p.kategori || '-'}</td>
+              <td>${p.wa}</td>
+              <td><span class="tag ${p.status === 'Baru' ? 'tag-amber' : 'tag-green'}">${p.status}</span></td>
+              <td>
+                <button class="btn btn-sm btn-wa" onclick="window.open('https://wa.me/${p.wa.replace(/[^0-9]/g, '')}', '_blank')">💬 Chat</button>
+                <button class="btn btn-sm btn-success" onclick="updatePendaftar(${p.id}, 'Diproses')" style="background: #10b981; color: #fff;">✓</button>
+                <button class="btn btn-sm btn-danger" onclick="hapusPendaftar(${p.id})">✕</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `}
+  `;
+}
+
+function updatePendaftar(id, status) {
+  const pendaftar = JSON.parse(localStorage.getItem('perbakin_pendaftar') || '[]');
+  const idx = pendaftar.findIndex(p => p.id === id);
+  if (idx >= 0) {
+    pendaftar[idx].status = status;
+    localStorage.setItem('perbakin_pendaftar', JSON.stringify(pendaftar));
+    showPage('pendaftar');
+    showToast(`Status diubah ke ${status}`, 'success');
+  }
+}
+
+function hapusPendaftar(id) {
+  if (confirm('Hapus pendaftar ini?')) {
+    const pendaftar = JSON.parse(localStorage.getItem('perbakin_pendaftar') || '[]').filter(p => p.id !== id);
+    localStorage.setItem('perbakin_pendaftar', JSON.stringify(pendaftar));
+    showPage('pendaftar');
+    showToast('Pendaftar dihapus', 'success');
+  }
+}
+
+function renderPesanAdmin() {
+  const messages = JSON.parse(localStorage.getItem('perbakin_messages') || '[]');
+  return `
+    <div class="admin-header">
+      <h1>Pesan Masuk</h1>
+      <span class="text-muted text-sm">${messages.length} pesan</span>
+    </div>
+    ${messages.length === 0 ? '<p class="empty-state">Belum ada pesan. Silakan tes dari halaman <a href="kontak.html">Kontak</a>.</p>' : `
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        ${messages.map(m => `
+          <div style="background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <div><strong>${m.nama}</strong> · <span class="text-muted">${m.email}</span></div>
+              <div class="text-muted text-sm">${formatDate(m.tanggal.split('T')[0])}</div>
+            </div>
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px;">${m.subjek}</div>
+            <p style="font-size: 13px; color: var(--ink-mid); margin-bottom: 8px;">${m.pesan}</p>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-sm btn-outline" onclick="hapusPesan(${m.id})">Hapus</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `}
+  `;
+}
+
+function hapusPesan(id) {
+  if (confirm('Hapus pesan ini?')) {
+    const messages = JSON.parse(localStorage.getItem('perbakin_messages') || '[]').filter(m => m.id !== id);
+    localStorage.setItem('perbakin_messages', JSON.stringify(messages));
+    showPage('pesan');
+    showToast('Pesan dihapus', 'success');
+  }
+}
+
+function renderSettings() {
+  return `
+    <div class="admin-header">
+      <h1>Pengaturan</h1>
+    </div>
+    <div style="background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; max-width: 600px;">
+      <h3 style="font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 8px;">Data & Reset</h3>
+      <p class="text-muted" style="margin-bottom: 24px;">Kelola data website. Semua data tersimpan di browser (localStorage).</p>
+
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">ℹ️ Info Website</h4>
+        <div style="font-size: 13px; color: var(--ink-mid); line-height: 1.8;">
+          · Total Berita: <strong>${getData('berita').length}</strong><br/>
+          · Total Klub: <strong>${getData('klub').length}</strong><br/>
+          · Total Pengurus: <strong>${getData('pengurus').length}</strong><br/>
+          · Total Pengumuman: <strong>${getData('pengumuman').length}</strong><br/>
+          · Total Galeri: <strong>${getData('galeri').length}</strong><br/>
+          · Pendaftar Baru: <strong>${JSON.parse(localStorage.getItem('perbakin_pendaftar') || '[]').length}</strong><br/>
+          · Pesan Masuk: <strong>${JSON.parse(localStorage.getItem('perbakin_messages') || '[]').length}</strong>
+        </div>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid var(--line); margin: 20px 0;">
+
+      <div style="margin-bottom: 12px;">
+        <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Reset Data</h4>
+        <p class="text-sm text-muted" style="margin-bottom: 12px;">Kembalikan semua data ke kondisi awal. Tidak bisa dibatalkan.</p>
+        <button class="btn btn-danger" onclick="resetAll()">⚠️ Reset Semua Data</button>
+      </div>
+    </div>
+  `;
+}
+
+function resetAll() {
+  if (confirm('Yakin reset SEMUA data? Semua perubahan akan hilang dan kembali ke data awal.')) {
+    if (confirm('Konfirmasi sekali lagi: RESET?')) {
+      resetData();
+      showToast('Data direset!', 'success');
+      showPage('dashboard');
+    }
+  }
+}
+
+function hapusItem(key, id) {
+  const label = { berita: 'berita', klub: 'klub', pengurus: 'pengurus', pengumuman: 'pengumuman', galeri: 'foto' }[key];
+  if (confirm(`Hapus ${label} ini?`)) {
+    deleteItem(key, id);
+    showToast(`${label} berhasil dihapus`, 'success');
+    showPage(currentPage);
+  }
+}
+</script>
+</body>
+</html>

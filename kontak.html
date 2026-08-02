@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kontak — PERBAKIN Papua Selatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div id="app-header"></div>
+
+<div class="page-header">
+  <div class="wrapper">
+    <div class="breadcrumb">
+      <a href="index.html">Beranda</a>
+      <span class="sep">/</span>
+      <span class="current">Kontak</span>
+    </div>
+    <h1>Hubungi <em>Kami</em></h1>
+    <p>Sekretariat PERBAKIN Papua Selatan siap melayani pertanyaan dan kebutuhan Anda.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="wrapper">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+      <div>
+        <h2 class="serif" style="font-size: 28px; margin-bottom: 24px;">Kirim <em style="color: var(--primary); font-style: italic;">Pesan</em></h2>
+        <form id="form-kontak" onsubmit="submitKontak(event)">
+          <div class="form-group">
+            <label>Nama Lengkap *</label>
+            <input type="text" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Subjek *</label>
+            <input type="text" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Pesan *</label>
+            <textarea class="form-textarea" required placeholder="Tulis pesan Anda di sini..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg">📨 Kirim Pesan</button>
+        </form>
+      </div>
+
+      <div>
+        <h2 class="serif" style="font-size: 28px; margin-bottom: 24px;">Info <em style="color: var(--primary); font-style: italic;">Kontak</em></h2>
+
+        <div id="kontak-cards" style="background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div style="background: linear-gradient(135deg, var(--wa), var(--wa-dark)); color: #fff; border-radius: 12px; padding: 20px; text-align: center;">
+          <h3 class="serif" style="font-size: 22px; margin-bottom: 8px; font-weight: 400;">Respon Lebih Cepat via WhatsApp</h3>
+          <p style="font-size: 13px; opacity: 0.9; margin-bottom: 16px;">Untuk respon 1×24 jam, hubungi kami langsung via WhatsApp.</p>
+          <button class="btn btn-white" onclick="openWA('Halo Admin, saya ingin bertanya tentang PERBAKIN Papua Selatan.')">💬 Chat WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="app-footer"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+mount('kontak');
+
+function renderKontakCards() {
+  const k = getData('kontak');
+  const items = ['sekretariat', 'whatsapp', 'email'];
+  const html = items.map(key => {
+    const item = k[key];
+    if (!item) return '';
+    return `
+      <div style="display: flex; gap: 14px; align-items: start; ${key !== 'email' ? 'margin-bottom: 16px;' : ''}">
+        <div style="width: 40px; height: 40px; border-radius: 8px; background: ${item.iconBg}; color: ${item.iconColor}; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">${item.icon}</div>
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">${item.label}</h4>
+          <p style="font-size: 13px; color: var(--ink-mid); line-height: 1.5;">${item.judul}${item.subjudul ? '<br/><span style="color: var(--muted); font-size: 12px;">' + item.subjudul + '</span>' : ''}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('kontak-cards').innerHTML = html;
+}
+renderKontakCards();
+
+function submitKontak(e) {
+  e.preventDefault();
+  const form = e.target;
+  const inputs = form.querySelectorAll('input, textarea');
+  const data = {
+    id: Date.now(),
+    nama: inputs[0].value,
+    email: inputs[1].value,
+    subjek: inputs[2].value,
+    pesan: inputs[3].value,
+    tanggal: new Date().toISOString(),
+    status: 'Baru'
+  };
+
+  const messages = JSON.parse(localStorage.getItem('perbakin_messages') || '[]');
+  messages.unshift(data);
+  localStorage.setItem('perbakin_messages', JSON.stringify(messages));
+
+  showToast('Pesan terkirim! Admin akan membalas via email.', 'success');
+  form.reset();
+}
+</script>
+</body>
+</html>

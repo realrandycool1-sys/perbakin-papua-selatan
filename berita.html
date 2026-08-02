@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Berita — PERBAKIN Papua Selatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div id="app-header"></div>
+
+<div class="page-header">
+  <div class="wrapper">
+    <div class="breadcrumb">
+      <a href="index.html">Beranda</a>
+      <span class="sep">/</span>
+      <span class="current">Berita</span>
+    </div>
+    <h1>Berita & <em>Kegiatan</em></h1>
+    <p>Liputan kegiatan, prestasi atlet, dan pengumuman resmi PERBAKIN Papua Selatan.</p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="wrapper">
+    <div class="filter-bar" id="filter-kategori">
+      <button class="filter-btn active" data-kat="all">Semua</button>
+      <button class="filter-btn" data-kat="Kegiatan">Kegiatan</button>
+      <button class="filter-btn" data-kat="Prestasi">Prestasi</button>
+      <button class="filter-btn" data-kat="Pelatihan">Pelatihan</button>
+      <button class="filter-btn" data-kat="Pengumuman">Pengumuman</button>
+      <button class="filter-btn" data-kat="Regulasi">Regulasi</button>
+    </div>
+    <div class="news-grid" id="news-grid"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</section>
+
+<div id="app-footer"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+mount('berita');
+
+let currentKat = 'all';
+let currentPage = 1;
+const perPage = 6;
+
+function renderNews() {
+  let all = getData('berita');
+  if (currentKat !== 'all') all = all.filter(b => b.kategori === currentKat);
+
+  const q = getQueryParam('q');
+  if (q) {
+    all = all.filter(b =>
+      b.judul.toLowerCase().includes(q.toLowerCase()) ||
+      b.excerpt.toLowerCase().includes(q.toLowerCase())
+    );
+  }
+
+  const total = all.length;
+  const totalPages = Math.ceil(total / perPage);
+  if (currentPage > totalPages) currentPage = 1;
+  const start = (currentPage - 1) * perPage;
+  const items = all.slice(start, start + perPage);
+
+  if (items.length === 0) {
+    document.getElementById('news-grid').innerHTML = '<p class="text-muted text-center" style="grid-column: 1/-1; padding: 60px 20px;">Tidak ada berita ditemukan.</p>';
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('news-grid').innerHTML = items.map(b => `
+    <a href="berita-detail.html?id=${b.id}" class="news-card">
+      <div class="news-pic ${b.pic}">
+        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span></div>
+      </div>
+      <div class="news-body">
+        <div class="cat">${b.kategori}</div>
+        <h3>${b.judul}</h3>
+        <p>${b.excerpt}</p>
+        <div class="meta">📅 ${formatDate(b.tanggal)} · 👁 ${b.views}</div>
+      </div>
+    </a>
+  `).join('');
+
+  if (totalPages > 1) {
+    let html = `<button class="page-num" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled style="opacity:0.4"' : ''}>‹ Prev</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="page-num ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+    }
+    html += `<button class="page-num" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled style="opacity:0.4"' : ''}>Next ›</button>`;
+    document.getElementById('pagination').innerHTML = html;
+  } else {
+    document.getElementById('pagination').innerHTML = '';
+  }
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderNews();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.querySelectorAll('#filter-kategori .filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#filter-kategori .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentKat = btn.dataset.kat;
+    currentPage = 1;
+    renderNews();
+  });
+});
+
+const urlCat = getQueryParam('cat');
+if (urlCat) {
+  const btn = document.querySelector(`[data-kat="${urlCat}"]`);
+  if (btn) btn.click();
+}
+
+renderNews();
+</script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Organisasi — PERBAKIN Papua Selatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.tab-pad { padding-top: 24px; }
+
+/* Ketua hero card */
+.ketua-hero { background: linear-gradient(135deg, var(--secondary) 0%, #1e293b 100%); border-radius: 16px; padding: 32px; color: #fff; display: grid; grid-template-columns: 200px 1fr; gap: 32px; align-items: center; max-width: 720px; margin: 0 auto 40px; box-shadow: 0 12px 32px -8px rgba(15,23,42,0.3); }
+.ketua-foto-wrap { width: 200px; height: 200px; border-radius: 50%; border: 5px solid var(--accent); box-shadow: 0 8px 24px rgba(0,0,0,0.3); position: relative; overflow: hidden; flex-shrink: 0; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+.ketua-foto-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Kategori senjata - new style */
+.kat-grid-new { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.kat-card-new { background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; transition: all 0.2s; display: flex; flex-direction: column; }
+.kat-card-new:hover { transform: translateY(-3px); box-shadow: 0 12px 32px -8px rgba(0,0,0,0.15); }
+.kat-card-new .img-wrap { aspect-ratio: 16/9; overflow: hidden; position: relative; background: var(--secondary); }
+.kat-card-new .img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.kat-card-new:hover .img-wrap img { transform: scale(1.05); }
+.kat-card-new .img-wrap .badge { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); color: #fff; padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; backdrop-filter: blur(4px); }
+.kat-card-new .img-wrap .olympic { position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #ffd700, #b87333); color: #14171e; padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.kat-card-new .body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+.kat-card-new h3 { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 4px; }
+.kat-card-new .tipe { font-size: 12px; color: var(--primary); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+.kat-card-new p.desc { font-size: 14px; color: var(--ink-mid); line-height: 1.6; margin-bottom: 16px; }
+.kat-card-new .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; background: var(--bg); border-radius: 10px; margin-bottom: 16px; }
+.kat-card-new .spec-grid .spec-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2px; }
+.kat-card-new .spec-grid .spec-value { font-size: 13px; font-weight: 600; color: var(--ink); }
+.kat-card-new .regulasi-box { padding: 12px 14px; background: linear-gradient(135deg, #fef3e2 0%, #fff 100%); border: 1px solid var(--accent-soft); border-radius: 8px; font-size: 12px; color: var(--ink-mid); line-height: 1.5; }
+.kat-card-new .regulasi-box strong { display: block; color: var(--accent); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+
+@media (max-width: 700px) { .kat-grid-new { grid-template-columns: 1fr; } .kat-card-new .spec-grid { grid-template-columns: 1fr; } }
+.ketua-foto-fallback { width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-family: 'DM Serif Display', serif; font-size: 80px; line-height: 1; }
+.ketua-foto-img.error { display: none; }
+.ketua-foto-fallback.hidden { display: none; }
+.ketua-info .label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.ketua-info h2 { font-family: 'DM Serif Display', serif; font-size: 36px; line-height: 1.1; margin-bottom: 8px; color: #fff; }
+.ketua-info .role { font-size: 14px; opacity: 0.8; margin-top: 8px; }
+
+/* Section headings */
+.section-group { margin-bottom: 48px; }
+.section-group h3.section-title { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 16px; padding-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.section-group h3.section-title .count { font-size: 12px; font-family: 'Outfit', sans-serif; color: var(--muted); font-weight: 500; padding: 4px 10px; background: var(--line-soft); border-radius: 999px; }
+
+/* Pelindung & Penasehat */
+.pelindung-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.pelindung-item { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; transition: all 0.15s; }
+.pelindung-item:hover { border-color: var(--accent); transform: translateY(-1px); }
+.pelindung-item .icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.pelindung-item.penasehat .icon { background: #dbeafe; color: var(--blue); }
+.pelindung-item .role { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.pelindung-item .name { font-size: 14px; font-weight: 600; color: var(--ink); margin-top: 2px; }
+
+/* Pengurus Inti grid */
+.inti-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.inti-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; text-align: center; transition: all 0.15s; }
+.inti-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(153,27,27,0.08); }
+.inti-card .role { font-size: 11px; color: var(--primary); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+.inti-card .name { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+
+/* Bidang section */
+.bidang-section { margin-bottom: 24px; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.bidang-title { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: linear-gradient(135deg, var(--primary-soft) 0%, #fff 100%); border-bottom: 1px solid var(--line); }
+.bidang-title .ico { width: 32px; height: 32px; border-radius: 8px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.bidang-title h4 { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); flex: 1; }
+.bidang-title .badge { font-size: 11px; color: var(--muted); padding: 3px 8px; background: #fff; border-radius: 999px; border: 1px solid var(--line); }
+.bidang-grid { display: grid; grid-template-columns: repeat(5, 1fr); }
+.bidang-cell { padding: 14px 16px; border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.bidang-cell:nth-child(5n) { border-right: none; }
+.bidang-cell.ketua { background: linear-gradient(180deg, var(--primary-soft) 0%, #fff 60%); }
+.bidang-cell .role { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.bidang-cell.ketua .role { color: var(--primary); font-weight: 700; }
+.bidang-cell .name { font-size: 13px; font-weight: 500; color: var(--ink); line-height: 1.3; }
+.bidang-cell.ketua .name { font-weight: 700; font-size: 14px; }
+.bidang-cell.wakil { background: #fafbfc; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .ketua-hero { grid-template-columns: 1fr; text-align: center; padding: 24px; }
+  .ketua-foto-wrap { margin: 0 auto; }
+  .inti-grid { grid-template-columns: 1fr 1fr; }
+  .pelindung-grid { grid-template-columns: 1fr; }
+  .bidang-grid { grid-template-columns: 1fr 1fr; }
+  .bidang-cell { border-right: 1px solid var(--line-soft); }
+  .bidang-cell:nth-child(2n) { border-right: none; }
+  .bidang-cell:nth-child(5n) { border-right: 1px solid var(--line-soft); }
+  .kat-grid-new { grid-template-columns: 1fr; }
+  .kat-card-new .spec-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="app-header"></div>
+
+<div class="page-header">
+  <div class="wrapper">
+    <div class="breadcrumb">
+      <a href="index.html">Beranda</a>
+      <span class="sep">/</span>
+      <span class="current">Organisasi</span>
+    </div>
+    <h1>Profil <em>Organisasi</em></h1>
+    <p>Kenali PERBAKIN Papua Selatan — struktur pengurus, klub menembak, regulasi, dan kategori senjata yang dilombakan.</p>
+  </div>
+</div>
+
+<section class="section" style="padding-top: 40px;">
+  <div class="wrapper">
+    <div class="tabs">
+      <button class="tab active" data-tab="struktur" onclick="switchTab('struktur')">🏛️ Struktur</button>
+      <button class="tab" data-tab="klub" onclick="switchTab('klub')">🎯 Klub Menembak</button>
+      <button class="tab" data-tab="regulasi" onclick="switchTab('regulasi')">📋 Regulasi</button>
+      <button class="tab" data-tab="kategori" onclick="switchTab('kategori')">🔫 Kategori Senjata</button>
+    </div>
+
+    <!-- TAB: STRUKTUR -->
+    <div class="tab-content active" id="tab-struktur">
+      <div class="text-center" style="margin-bottom: 32px;">
+        <span class="tag tag-red">Masa Bakti 2023–2027</span>
+        <h2 class="serif" style="font-size: 32px; margin: 12px 0 8px;">Susunan <em style="color: var(--primary); font-style: italic;">Personalia</em></h2>
+        <p class="text-muted" id="total-pengurus-text">Memuat data...</p>
+      </div>
+      <div id="org-container"></div>
+    </div>
+
+    <!-- TAB: KLUB -->
+    <div class="tab-content" id="tab-klub">
+      <div class="text-center" style="margin-bottom: 24px;">
+        <h2 class="serif" style="font-size: 32px;">Klub Menembak <em style="color: var(--primary); font-style: italic;">Papua Selatan</em></h2>
+        <p class="text-muted" style="margin-top: 8px;"><span id="klub-count">0</span> klub aktif di 4 kabupaten</p>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-kab="all" onclick="filterKlub('all', this)">Semua Kabupaten</button>
+        <button class="filter-btn" data-kab="Merauke" onclick="filterKlub('Merauke', this)">Merauke</button>
+        <button class="filter-btn" data-kab="Boven Digoel" onclick="filterKlub('Boven Digoel', this)">Boven Digoel</button>
+        <button class="filter-btn" data-kab="Mappi" onclick="filterKlub('Mappi', this)">Mappi</button>
+        <button class="filter-btn" data-kab="Asmat" onclick="filterKlub('Asmat', this)">Asmat</button>
+      </div>
+      <div class="klub-grid" id="klub-grid"></div>
+    </div>
+
+    <!-- TAB: REGULASI -->
+    <div class="tab-content" id="tab-regulasi">
+      <div class="text-center" style="margin-bottom: 24px;">
+        <h2 class="serif" style="font-size: 32px;">Regulasi & <em style="color: var(--primary); font-style: italic;">Peraturan</em></h2>
+        <p class="text-muted" style="margin-top: 8px;">Kumpulan regulasi resmi yang berlaku di lingkungan PERBAKIN Papua Selatan.</p>
+      </div>
+      <div class="reg-list" id="reg-list"></div>
+    </div>
+
+    <!-- TAB: KATEGORI -->
+    <div class="tab-content" id="tab-kategori">
+      <div class="text-center" style="margin-bottom: 24px;">
+        <h2 class="serif" style="font-size: 32px;">Kategori <em style="color: var(--primary); font-style: italic;">Senjata</em></h2>
+        <p class="text-muted" style="margin-top: 8px;">Empat kategori utama yang dipertandingkan di PERBAKIN dan event Olympic / ISSF. Sumber: PERBAKIN &amp; NOC Indonesia.</p>
+      </div>
+      <div class="kat-grid-new" id="kat-grid"></div>
+    </div>
+  </div>
+</section>
+
+<div id="app-footer"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+mount('organisasi');
+
+// ===== STRUKTUR =====
+function renderStruktur() {
+  const pengurus = getData('pengurus');
+  const total = pengurus.length;
+  document.getElementById('total-pengurus-text').textContent = `Total ${total} pengurus dalam ${new Set(pengurus.map(p => p.group)).size} bagian.`;
+
+  const ketua = pengurus.find(p => p.isKetua);
+  const intiLainnya = pengurus.filter(p => p.group === 'Pengurus Inti' && !p.isKetua);
+  const pelindung = pengurus.filter(p => p.group === 'Badan Pelindung');
+  const penasehat = pengurus.filter(p => p.group === 'Badan Penasehat');
+
+  // Group bidang/komisi preserving order from data.js
+  const groupedOrder = [];
+  const grouped = {};
+  pengurus.forEach(p => {
+    if (['Badan Pelindung', 'Badan Penasehat', 'Pengurus Inti'].includes(p.group)) return;
+    if (!grouped[p.group]) {
+      grouped[p.group] = [];
+      groupedOrder.push(p.group);
+    }
+    grouped[p.group].push(p);
+  });
+
+  // Sort within each group: Ketua, Wakil, then Anggota
+  const roleOrder = { 'Ketua': 1, 'Wakil Ketua': 2, 'Wakil': 2, 'Wakil Ketua Umum I': 2, 'Wakil Ketua Umum II': 3, 'Wakil Sekretaris Umum': 5, 'Wakil Bendahara Umum': 7, 'Sekretaris Umum': 4, 'Bendahara Umum': 6, 'Anggota': 8 };
+  Object.values(grouped).forEach(arr => {
+    arr.sort((a, b) => (roleOrder[a.jabatan] || 99) - (roleOrder[b.jabatan] || 99));
+  });
+
+  const inisial = ketua ? ketua.nama.charAt(0) : '?';
+  const fotoHTML = ketua && ketua.foto
+    ? `<img src="${ketua.foto}" alt="${ketua.nama}" class="ketua-foto-img" id="ketuaFoto" /><div class="ketua-foto-fallback" id="ketuaFallback">${inisial}</div>`
+    : `<div class="ketua-foto-fallback">${inisial}</div>`;
+
+  return `
+    ${ketua ? `
+    <div class="ketua-hero">
+      <div class="ketua-foto-wrap">${fotoHTML}</div>
+      <div class="ketua-info">
+        <div class="label">⭐ ${ketua.jabatan}</div>
+        <h2>${ketua.nama}</h2>
+        <div class="role">Periode 2023–2027 · PERBAKIN Provinsi Papua Selatan</div>
+      </div>
+    </div>
+    ` : ''}
+
+    ${pelindung.length > 0 ? `
+    <div class="section-group">
+      <h3 class="section-title">🛡️ Badan Pelindung <span class="count">${pelindung.length} orang</span></h3>
+      <div class="pelindung-grid">
+        ${pelindung.map(p => `
+          <div class="pelindung-item">
+            <div class="icon">⭐</div>
+            <div>
+              <div class="role">${p.jabatan}</div>
+              <div class="name">${p.nama}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    ${penasehat.length > 0 ? `
+    <div class="section-group">
+      <h3 class="section-title">💼 Badan Penasehat <span class="count">${penasehat.length} orang</span></h3>
+      <div class="pelindung-grid">
+        ${penasehat.map(p => `
+          <div class="pelindung-item penasehat">
+            <div class="icon">👤</div>
+            <div>
+              <div class="role">${p.jabatan}</div>
+              <div class="name">${p.nama}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    ${intiLainnya.length > 0 ? `
+    <div class="section-group">
+      <h3 class="section-title">👥 Pengurus Inti <span class="count">${intiLainnya.length} orang</span></h3>
+      <div class="inti-grid">
+        ${intiLainnya.map(p => `
+          <div class="inti-card">
+            <div class="role">${p.jabatan}</div>
+            <div class="name">${p.nama}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="section-group">
+      <h3 class="section-title">🎯 Bidang & Komisi <span class="count">${groupedOrder.length} bagian</span></h3>
+      ${groupedOrder.map(g => `
+        <div class="bidang-section">
+          <div class="bidang-title">
+            <span class="ico">${g.includes('Komisi') ? '💼' : '🎯'}</span>
+            <h4>${g}</h4>
+            <span class="badge">${grouped[g].length} orang</span>
+          </div>
+          <div class="bidang-grid">
+            ${grouped[g].map((p, i) => `
+              <div class="bidang-cell ${i === 0 ? 'ketua' : (i === 1 ? 'wakil' : '')}">
+                <div class="role">${p.jabatan}</div>
+                <div class="name">${p.nama}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+document.getElementById('org-container').innerHTML = renderStruktur();
+
+// Handle ketua foto loading
+(function() {
+  const fotoImg = document.getElementById('ketuaFoto');
+  const fallback = document.getElementById('ketuaFallback');
+  if (fotoImg) {
+    fotoImg.addEventListener('load', function() {
+      if (fallback) fallback.style.display = 'none';
+    });
+    fotoImg.addEventListener('error', function() {
+      this.classList.add('error');
+      if (fallback) fallback.classList.remove('hidden');
+    });
+    if (fotoImg.complete) {
+      if (fotoImg.naturalWidth > 0) {
+        if (fallback) fallback.style.display = 'none';
+      } else {
+        fotoImg.classList.add('error');
+        if (fallback) fallback.classList.remove('hidden');
+      }
+    }
+  }
+})();
+
+// ===== KLUB =====
+let currentKab = 'all';
+function renderKlub() {
+  let all = getData('klub');
+  if (currentKab !== 'all') all = all.filter(k => k.kabupaten === currentKab);
+  document.getElementById('klub-count').textContent = getData('klub').length;
+  if (all.length === 0) {
+    return '<p class="text-muted text-center" style="grid-column: 1/-1; padding: 40px;">Tidak ada klub di kabupaten ini.</p>';
+  }
+  return all.map(k => `
+    <div class="klub-card">
+      <div class="top">
+        <div class="avatar">${k.singkatan.substring(0, 2)}</div>
+        <span class="tag ${k.status === 'Aktif' ? 'tag-green' : 'tag-amber'}">${k.status}</span>
+      </div>
+      <h4>${k.nama}</h4>
+      <div class="loc">📍 ${k.kabupaten} · Est. ${k.tahun}</div>
+      <div class="text-sm text-muted" style="margin-top: 8px;">${k.deskripsi}</div>
+      <div class="stats">
+        <span>👥 ${k.atlet} atlet</span>
+        <span>🎯 ${k.kategori} kategori</span>
+      </div>
+    </div>
+  `).join('');
+}
+function filterKlub(kab, btn) {
+  currentKab = kab;
+  document.querySelectorAll('[data-kab]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('klub-grid').innerHTML = renderKlub();
+}
+document.getElementById('klub-grid').innerHTML = renderKlub();
+
+// ===== REGULASI =====
+function renderRegulasi() {
+  const items = getData('regulasi');
+  return items.map(r => {
+    const hasFile = r.file && r.file.length > 0;
+    const linkAttrs = hasFile
+      ? `href="${r.file}" target="_blank" rel="noopener" download`
+      : `href="#" onclick="event.preventDefault();showToast('File PDF belum tersedia (demo)','info')"`;
+    return `
+    <a ${linkAttrs} class="reg-item" ${hasFile ? '' : 'style="cursor: pointer;"'}>
+      <div class="icon">PDF</div>
+      <div>
+        <h4>${r.judul}</h4>
+        <p>${r.deskripsi}</p>
+      </div>
+      <div class="meta">
+        <div>${r.tahun}</div>
+        <div style="margin-top: 4px;">${r.ukuran}</div>
+        <div style="margin-top: 8px; color: var(--blue); font-weight: 600;">${hasFile ? '⬇ Download / Buka' : '⬇ Download'}</div>
+      </div>
+    </a>
+  `;
+  }).join('');
+}
+document.getElementById('reg-list').innerHTML = renderRegulasi();
+
+// ===== KATEGORI =====
+function renderKategori() {
+  const items = getData('kategori');
+  return items.map(k => `
+    <div class="kat-card-new">
+      <div class="img-wrap">
+        ${k.gambar ? `<img src="${k.gambar}" alt="${k.nama}" onerror="this.outerHTML='<div style=&quot;display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-size:64px;background:linear-gradient(135deg, #7c1515, #991b1b, #b87333)&quot;>${k.icon}</div>'" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;font-size:64px;background:linear-gradient(135deg, #7c1515, #991b1b, #b87333)">${k.icon}</div>`}
+        <span class="badge">${k.tipe}</span>
+        ${k.olympicEvent ? '<span class="olympic">🏅 Olympic</span>' : ''}
+      </div>
+      <div class="body">
+        <h3>${k.nama}</h3>
+        <div class="tipe">${k.tipe}</div>
+        <p class="desc">${k.deskripsi}</p>
+        <div class="spec-grid">
+          <div>
+            <div class="spec-label">Kaliber</div>
+            <div class="spec-value">${k.kaliber || '-'}</div>
+          </div>
+          <div>
+            <div class="spec-label">Jarak</div>
+            <div class="spec-value">${k.jarak || '-'}</div>
+          </div>
+          <div style="grid-column: 1/-1;">
+            <div class="spec-label">Peluru</div>
+            <div class="spec-value">${k.peluru || '-'}</div>
+          </div>
+          <div style="grid-column: 1/-1;">
+            <div class="spec-label">Nomor Olympic</div>
+            <div class="spec-value">${k.olympicEvent || '-'}</div>
+          </div>
+        </div>
+        ${k.regulasi ? `<div class="regulasi-box"><strong>📋 Prosedur Pertandingan</strong>${k.regulasi}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+document.getElementById('kat-grid').innerHTML = renderKategori();
+
+// Initial tab from URL
+const initialTab = getQueryParam('tab');
+if (initialTab) {
+  switchTab(initialTab);
+}
+</script>
+</body>
+</html>

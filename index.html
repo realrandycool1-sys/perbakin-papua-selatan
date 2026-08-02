@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PERBAKIN Papua Selatan — Beranda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  /* Ketua showcase - elegant editorial style */
+  .ketua-showcase {
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 36px 28px 28px;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 20px 60px -10px rgba(0,0,0,0.4);
+  }
+  .ketua-foto-frame {
+    position: relative;
+    width: 320px; height: 320px;
+    margin: 0 auto 24px;
+  }
+  .ketua-foto-img, .ketua-foto-fallback {
+    width: 320px; height: 320px;
+    border-radius: 12px;
+    object-fit: contain;
+    padding: 12px;
+    background: rgba(255,255,255,0.96);
+    border: 3px solid var(--accent);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: 'DM Serif Display', serif;
+    font-size: 96px;
+    background: linear-gradient(135deg, #7c1515, #991b1b, #b87333);
+  }
+  .ketua-info .ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .ketua-info .ornament::before, .ketua-info .ornament::after {
+    content: "";
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .ketua-info .label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .ketua-info h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    line-height: 1.15;
+    margin-bottom: 8px;
+    color: #fff;
+    font-weight: 400;
+  }
+  .ketua-info .period {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+    margin-bottom: 16px;
+    letter-spacing: 0.3px;
+  }
+  .ketua-info .divider {
+    width: 40px;
+    height: 1px;
+    background: rgba(184,115,51,0.5);
+    margin: 0 auto 16px;
+  }
+  .ketua-info .org {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .klub-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 88px;
+    font-weight: 400;
+    color: var(--accent);
+    line-height: 1;
+    margin: 8px 0 12px;
+    text-shadow: 0 4px 16px rgba(184,115,51,0.3);
+  }
+  .klub-kab {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .stat-strip {
+    padding: 40px 0 60px;
+  }
+  .stat-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px 24px;
+  }
+  .stat-item {
+    position: relative;
+    padding-left: 20px;
+    border-left: 2px solid var(--accent);
+  }
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 64px;
+    color: #fff;
+    line-height: 1;
+    font-weight: 400;
+  }
+  .stat-plus {
+    font-size: 28px;
+    color: var(--accent);
+    vertical-align: super;
+    margin-left: 2px;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    margin-top: 10px;
+    font-weight: 500;
+  }
+  @media (max-width: 900px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 32px 24px; }
+  }
+  @media (max-width: 500px) {
+    .stat-grid { grid-template-columns: 1fr; gap: 24px; max-width: 420px; }
+    .stat-num { font-size: 52px; }
+  }
+  /* Mobile: shrink ketua foto & showcase card */
+  @media (max-width: 700px) {
+    .ketua-showcase { padding: 24px 18px 20px; }
+    .ketua-foto-frame { width: 220px; height: 220px; margin: 0 auto 16px; }
+    .ketua-foto-img, .ketua-foto-fallback { width: 220px; height: 220px; font-size: 80px; }
+    .ketua-info .org { margin-top: 32px !important; font-size: 10px; }
+  }
+  @media (max-width: 420px) {
+    .ketua-foto-frame { width: 180px; height: 180px; }
+    .ketua-foto-img, .ketua-foto-fallback { width: 180px; height: 180px; font-size: 64px; }
+  }
+  .ketua-foto-img.error { display: none; }
+</style>
+</head>
+<body>
+
+<div id="app-header"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrapper">
+    <div>
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; margin-bottom: 20px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent);"></span>
+        Resmi · PERBAKIN Pusat · 2026
+      </div>
+      <h1>Presisi, Sportivitas, <em>Prestasi</em></h1>
+      <p>Wadah resmi olahraga menembak di Provinsi Papua Selatan. Membina atlet, memperkuat klub, dan mengharumkan nama daerah di tingkat nasional.</p>
+      <div class="hero-ctas">
+        <a href="pendaftaran.html" class="btn btn-white btn-lg">📝 Daftar Sekarang</a>
+        <a href="organisasi.html" class="btn btn-lg" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3);">Pelajari PERBAKIN →</a>
+      </div>
+    </div>
+    <div class="ketua-showcase">
+      <div class="ketua-foto-frame">
+        <img src="assets/logo.png" alt="Logo PERBAKIN Papua Selatan" class="ketua-foto-img" id="heroKetuaFoto" onerror="this.outerHTML='<div class=&quot;ketua-foto-fallback&quot; id=&quot;heroKetuaFallback&quot;>🛡️</div>'" />
+      </div>
+      <div class="ketua-info">
+        <div class="org" style="margin-top: 60px;">PERBAKIN · Provinsi Papua Selatan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-strip">
+    <div class="stat-grid">
+      <div class="stat-item">
+        <div class="stat-num"><span id="statKlub">6</span><span class="stat-plus">+</span></div>
+        <div class="stat-label">Klub Terdaftar</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num"><span id="statAtlet">105</span><span class="stat-plus">+</span></div>
+        <div class="stat-label">Atlet Aktif</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num"><span id="statKab">4</span></div>
+        <div class="stat-label">Kabupaten</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">8<span class="stat-plus">+</span></div>
+        <div class="stat-label">Tahun Mengabdi</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section class="section" style="background: #fff;">
+  <div class="wrapper">
+    <div class="section-head">
+      <h2>Sorotan Berita</h2>
+      <a href="berita.html" class="more">Lihat semua berita</a>
+    </div>
+    <div id="featured-container"></div>
+  </div>
+</section>
+
+<!-- BERITA TERBARU -->
+<section class="section" style="background: var(--bg);">
+  <div class="wrapper">
+    <div class="section-head">
+      <h2>Berita Terbaru</h2>
+      <div style="display: flex; gap: 6px;">
+        <button class="filter-btn active" onclick="filterKategori('all', this)">Semua</button>
+        <button class="filter-btn" onclick="filterKategori('Kegiatan', this)">Kegiatan</button>
+        <button class="filter-btn" onclick="filterKategori('Prestasi', this)">Prestasi</button>
+        <button class="filter-btn" onclick="filterKategori('Pelatihan', this)">Pelatihan</button>
+      </div>
+    </div>
+    <div class="news-grid" id="news-grid-home"></div>
+  </div>
+</section>
+
+<!-- BANNER PROMO -->
+<section class="section" style="padding-top: 0; background: var(--bg);">
+  <div class="wrapper">
+    <div class="banner-promo">
+      <div>
+        <div class="eyebrow">🎯 Program Unggulan 2026</div>
+        <h2>Mencetak Atlet <em>Berprestasi</em><br/>dari Tanah Papua</h2>
+        <p>Program pembinaan atlet muda menembak di seluruh Papua Selatan. Didukung oleh PERBAKIN pusat, pelatih bersertifikat, dan fasilitas standar internasional.</p>
+        <a href="organisasi.html" class="btn btn-white">Pelajari Program →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GATEWAY 2-COL -->
+<section class="section" style="padding-top: 0; background: var(--bg);">
+  <div class="wrapper">
+    <div class="section-head">
+      <h2>Jelajahi PERBAKIN</h2>
+    </div>
+    <div class="gateway">
+      <a href="organisasi.html" class="gw gw-blue">
+        <div>
+          <h2>ORGANISASI</h2>
+          <p>Kenali struktur, sejarah, klub, dan kategori senjata. Pelajari regulasi resmi PERBAKIN.</p>
+          <span class="btn btn-white btn-sm">Lihat Organisasi →</span>
+        </div>
+      </a>
+      <a href="pendaftaran.html" class="gw gw-red">
+        <div>
+          <h2>KEANGGOTAAN</h2>
+          <p>Daftar sebagai anggota PERBAKIN Papua Selatan. Proses mudah via WhatsApp, respon dalam 1×24 jam.</p>
+          <span class="btn btn-white btn-sm">Daftar Sekarang →</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- PENGUMUMAN -->
+<section class="section" style="padding-top: 0; background: var(--bg);">
+  <div class="wrapper">
+    <div class="section-head">
+      <h2>Pengumuman</h2>
+      <a href="berita.html?cat=Pengumuman" class="more">Lihat semua</a>
+    </div>
+    <div class="peng-grid" id="pengumuman-container"></div>
+  </div>
+</section>
+
+<!-- GALERI -->
+<section class="section" style="background: #fff;">
+  <div class="wrapper">
+    <div class="section-head">
+      <h2>Galeri Kegiatan</h2>
+      <a href="galeri.html" class="more">Lihat semua galeri</a>
+    </div>
+    <div class="galeri-grid" id="galeri-home"></div>
+  </div>
+</section>
+
+<div id="app-footer"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+mount('beranda');
+
+// Handle ketua photo loading with fallback
+(function() {
+  const foto = document.getElementById('heroKetuaFoto');
+  const fallback = document.getElementById('heroKetuaFallback');
+  if (foto) {
+    foto.addEventListener('load', function() {
+      if (fallback) fallback.style.display = 'none';
+    });
+    foto.addEventListener('error', function() {
+      this.classList.add('error');
+      if (fallback) fallback.classList.remove('hidden');
+    });
+    if (foto.complete) {
+      if (foto.naturalWidth > 0) {
+        if (fallback) fallback.style.display = 'none';
+      } else {
+        foto.classList.add('error');
+        if (fallback) fallback.classList.remove('hidden');
+      }
+    }
+  }
+})();
+
+// Render data jumlah klub di hero (dinamis dari localStorage)
+(function() {
+  const klub = getData('klub');
+  const total = klub.length;
+  const kab = [...new Set(klub.map(k => k.kabupaten))].filter(Boolean);
+  const totalAtlet = klub.reduce((s, k) => s + (parseInt(k.atlet) || 0), 0);
+  // Stat strip
+  if (document.getElementById('statKlub')) document.getElementById('statKlub').textContent = total;
+  if (document.getElementById('statAtlet')) document.getElementById('statAtlet').textContent = totalAtlet;
+  if (document.getElementById('statKab')) document.getElementById('statKab').textContent = kab.length;
+})();
+
+function renderFeatured() {
+  const all = getData('berita');
+  if (all.length === 0) return '<p class="text-muted">Belum ada berita.</p>';
+  const main = all[0];
+  const side = all.slice(1, 4);
+  return `
+    <div class="featured-grid">
+      <a href="berita-detail.html?id=${main.id}" class="featured-main ${main.pic}">
+        <div class="featured-main-content">
+          <span class="tag tag-red">${main.kategori}</span>
+          <h3>${main.judul}</h3>
+          <div class="meta">📅 ${formatDate(main.tanggal)} &nbsp;·&nbsp; 👁 ${main.views} dilihat</div>
+        </div>
+      </a>
+      <div class="featured-side">
+        ${side.map(b => `
+          <a href="berita-detail.html?id=${b.id}" class="featured-side-item">
+            <div class="pic ${b.pic}"></div>
+            <div>
+              <span class="tag tag-red-soft">${b.kategori}</span>
+              <h4>${b.judul}</h4>
+              <div class="meta">${formatDate(b.tanggal)}</div>
+            </div>
+          </a>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+document.getElementById('featured-container').innerHTML = renderFeatured();
+
+let currentFilter = 'all';
+function renderNewsHome() {
+  let all = getData('berita');
+  if (currentFilter !== 'all') {
+    all = all.filter(b => b.kategori === currentFilter);
+  }
+  const items = all.slice(0, 6);
+  if (items.length === 0) {
+    return '<p class="text-muted text-center" style="grid-column: 1/-1; padding: 40px;">Tidak ada berita dalam kategori ini.</p>';
+  }
+  return items.map(b => `
+    <a href="berita-detail.html?id=${b.id}" class="news-card">
+      <div class="news-pic ${b.pic}">
+        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span></div>
+      </div>
+      <div class="news-body">
+        <div class="cat">${b.kategori}</div>
+        <h3>${b.judul}</h3>
+        <p>${b.excerpt}</p>
+        <div class="meta">📅 ${formatDate(b.tanggal)} · 👁 ${b.views}</div>
+      </div>
+    </a>
+  `).join('');
+}
+function filterKategori(kat, btn) {
+  currentFilter = kat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('news-grid-home').innerHTML = renderNewsHome();
+}
+document.getElementById('news-grid-home').innerHTML = renderNewsHome();
+
+function renderPengumuman() {
+  const items = getData('pengumuman').slice(0, 3);
+  return items.map(p => `
+    <a href="#" onclick="event.preventDefault();showToast('File belum diupload (mode offline)','info')" class="peng-card">
+      <div class="peng-card-top">PDF</div>
+      <div class="peng-card-body">
+        <div class="date">📅 ${formatDate(p.tanggal)}</div>
+        <h4>${p.judul}</h4>
+        <div class="dl">⬇ Download PDF</div>
+      </div>
+    </a>
+  `).join('');
+}
+document.getElementById('pengumuman-container').innerHTML = renderPengumuman();
+
+function renderGaleriHome() {
+  const items = getData('galeri').slice(0, 4);
+  return items.map(g => `
+    <div class="galeri-card" onclick="openLightbox(getData('galeri'), ${g.id - 1})">
+      <div class="galeri-pic ${g.pic}"></div>
+      <div class="galeri-card-body">
+        <div class="cat">📷 ${g.kategori}</div>
+        <h4>${g.judul}</h4>
+      </div>
+    </div>
+  `).join('');
+}
+document.getElementById('galeri-home').innerHTML = renderGaleriHome();
+</script>
+</body>
+</html>
