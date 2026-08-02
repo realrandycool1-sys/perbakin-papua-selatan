@@ -213,7 +213,7 @@
         <div class="stat-label">Kabupaten</div>
       </div>
       <div class="stat-item">
-        <div class="stat-num">8<span class="stat-plus">+</span></div>
+        <div class="stat-num"><span id="statTahun">6</span><span class="stat-plus">+</span></div>
         <div class="stat-label">Tahun Mengabdi</div>
       </div>
     </div>
@@ -348,6 +348,11 @@ mount('beranda');
   if (document.getElementById('statKlub')) document.getElementById('statKlub').textContent = total;
   if (document.getElementById('statAtlet')) document.getElementById('statAtlet').textContent = totalAtlet;
   if (document.getElementById('statKab')) document.getElementById('statKab').textContent = kab.length;
+  // Tahun mengabdi: auto-increment setiap tahun baru
+  if (document.getElementById('statTahun')) {
+    const FOUNDING_YEAR = 2020; // awal pembinaan — sesuaikan kalau perlu
+    document.getElementById('statTahun').textContent = new Date().getFullYear() - FOUNDING_YEAR;
+  }
 })();
 
 function renderFeatured() {
