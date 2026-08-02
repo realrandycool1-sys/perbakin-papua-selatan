@@ -27,15 +27,15 @@
       </div>
     </div>
     <h2>Login Admin</h2>
-    <p>Mode demo: gunakan username & password apa saja</p>
+    <p>Hubungi ketua untuk kredensial admin</p>
     <form onsubmit="doLogin(event)">
       <div class="form-group">
         <label>Username</label>
-        <input type="text" class="form-input" id="login-user" value="admin" required>
+        <input type="text" class="form-input" id="login-user" value="admin" required autocomplete="username">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" class="form-input" id="login-pass" value="admin" required>
+        <input type="password" class="form-input" id="login-pass" placeholder="Masukkan password" required autocomplete="current-password">
       </div>
       <button type="submit" class="btn btn-primary btn-block btn-lg">🔐 Login</button>
     </form>
@@ -82,6 +82,19 @@ const PIC_OPTIONS = ['pic-grad-1', 'pic-grad-2', 'pic-grad-3', 'pic-grad-4', 'pi
 
 function doLogin(e) {
   e.preventDefault();
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+
+  const ADMIN_USER = 'admin';
+  const ADMIN_PASS = '111';
+
+  if (user !== ADMIN_USER || pass !== ADMIN_PASS) {
+    showToast('Username atau password salah', 'error');
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+    return;
+  }
+
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('admin-layout').style.display = 'grid';
   showPage('dashboard');
