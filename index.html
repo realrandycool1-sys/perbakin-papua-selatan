@@ -360,21 +360,23 @@ function renderFeatured() {
   if (all.length === 0) return '<p class="text-muted">Belum ada berita.</p>';
   const main = all[0];
   const side = all.slice(1, 4);
+  const mainCoverStyle = getBeritaCoverStyle(main);
   return `
     <div class="featured-grid">
-      <a href="berita-detail.html?id=${main.id}" class="featured-main ${main.pic}">
+      <a href="${getBeritaHref(main)}" ${getBeritaTarget(main)} class="featured-main ${main.cover ? '' : (main.pic || 'pic-grad-1')}" style="${mainCoverStyle}">
+        ${getBeritaCoverOverlay(main)}
         <div class="featured-main-content">
-          <span class="tag tag-red">${main.kategori}</span>
+          <span class="tag tag-red">${main.kategori}</span>${getBeritaBadge(main)}
           <h3>${main.judul}</h3>
-          <div class="meta">📅 ${formatDate(main.tanggal)} &nbsp;·&nbsp; 👁 ${main.views} dilihat</div>
+          <div class="meta">📅 ${formatDate(main.tanggal)} &nbsp;·&nbsp; 👁 ${main.views || 0} dilihat ${main.externalUrl ? '· <span style="color: #fbbf24;">🔗 Eksternal</span>' : ''}</div>
         </div>
       </a>
       <div class="featured-side">
         ${side.map(b => `
-          <a href="berita-detail.html?id=${b.id}" class="featured-side-item">
-            <div class="pic ${b.pic}"></div>
+          <a href="${getBeritaHref(b)}" ${getBeritaTarget(b)} class="featured-side-item">
+            <div class="pic ${b.cover ? '' : (b.pic || 'pic-grad-1')}" style="${getBeritaCoverStyle(b)}">${getBeritaCoverOverlay(b)}</div>
             <div>
-              <span class="tag tag-red-soft">${b.kategori}</span>
+              <span class="tag tag-red-soft">${b.kategori}</span>${getBeritaBadge(b)}
               <h4>${b.judul}</h4>
               <div class="meta">${formatDate(b.tanggal)}</div>
             </div>
@@ -397,15 +399,16 @@ function renderNewsHome() {
     return '<p class="text-muted text-center" style="grid-column: 1/-1; padding: 40px;">Tidak ada berita dalam kategori ini.</p>';
   }
   return items.map(b => `
-    <a href="berita-detail.html?id=${b.id}" class="news-card">
-      <div class="news-pic ${b.pic}">
-        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span></div>
+    <a href="${getBeritaHref(b)}" ${getBeritaTarget(b)} class="news-card">
+      <div class="news-pic ${b.cover ? '' : (b.pic || 'pic-grad-1')}" style="${getBeritaCoverStyle(b)} position: relative;">
+        ${getBeritaCoverOverlay(b)}
+        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span>${getBeritaBadge(b)}</div>
       </div>
       <div class="news-body">
-        <div class="cat">${b.kategori}</div>
+        <div class="cat">${b.kategori} ${b.externalUrl ? '· <span style="color: #f59e0b;">🔗 Eksternal</span>' : ''}</div>
         <h3>${b.judul}</h3>
         <p>${b.excerpt}</p>
-        <div class="meta">📅 ${formatDate(b.tanggal)} · 👁 ${b.views}</div>
+        <div class="meta">📅 ${formatDate(b.tanggal)} · 👁 ${b.views || 0}</div>
       </div>
     </a>
   `).join('');

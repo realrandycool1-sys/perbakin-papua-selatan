@@ -227,8 +227,8 @@ function renderBeritaAdmin() {
       <tbody>
         ${berita.length === 0 ? '<tr><td colspan="6" class="empty-state">Belum ada berita. Klik "+ Tambah Berita" untuk mulai.</td></tr>' : berita.map(b => `
           <tr data-id="${b.id}">
-            <td><div class="row-img ${b.pic}"></div></td>
-            <td><strong>${b.judul.substring(0, 50)}${b.judul.length > 50 ? '...' : ''}</strong></td>
+            <td><div class="row-img ${b.cover ? '' : (b.pic || 'pic-grad-1')}" style="${b.cover && b.cover.data ? 'background-image: url(\'' + b.cover.data + '\'); background-size: cover; background-position: center;' : ''}">${b.externalUrl ? '<div style="position: absolute; top: 2px; right: 2px; background: #f59e0b; color: #fff; font-size: 9px; padding: 1px 4px; border-radius: 3px;">🔗</div>' : ''}</div></td>
+            <td><strong>${b.judul.substring(0, 50)}${b.judul.length > 50 ? '...' : ''}</strong>${b.externalUrl ? ' <span style="font-size: 10px; color: #f59e0b;">📰 ' + (b.source || 'eksternal') + '</span>' : ''}</td>
             <td><span class="tag tag-red-soft">${b.kategori}</span></td>
             <td>${formatDate(b.tanggal)}</td>
             <td>${b.views || 0}</td>
@@ -245,6 +245,7 @@ function renderBeritaAdmin() {
 
 function formBerita(id = null) {
   const item = id ? getData('berita').find(b => b.id === id) : {};
+  const hasExternal = !!item.externalUrl;
   const content = `
     <div class="modal-header">
       <h3>${id ? 'Edit' : 'Tambah'} Berita</h3>
@@ -269,20 +270,47 @@ function formBerita(id = null) {
         <label>Tanggal *</label>
         <input type="date" class="form-input" id="modal-tanggal" value="${item.tanggal || new Date().toISOString().split('T')[0]}" required>
       </div>
+      <div class="form-group" style="background: #fef9e7; padding: 12px; border-radius: 8px; border: 1px solid #f59e0b;">
+        <label style="display: flex; align-items: center; gap: 8px; color: #92400e;">
+          <input type="checkbox" id="modal-is-external" ${hasExternal ? 'checked' : ''} onchange="toggleExternalFields(this.checked)">
+          <strong>🔗 Berita ini link ke website lain (sumber eksternal)</strong>
+        </label>
+        <div id="external-fields" style="margin-top: 10px; ${hasExternal ? '' : 'display:none;'}">
+          <label style="font-size: 13px;">URL Berita Asal *</label>
+          <input type="url" class="form-input" id="modal-external-url" value="${item.externalUrl || ''}" placeholder="https://www.kompas.com/..." oninput="previewExternalSource(this)">
+          <div id="preview-external-source" style="margin-top: 6px; font-size: 12px; color: var(--muted);">
+            ${item.externalUrl ? `Sumber: <strong>${getSourceFromUrl(item.externalUrl) || 'Tidak dikenali'}</strong>` : 'Paste URL lengkap, sumber akan otomatis terdeteksi (misal: kompas.com → "Kompas.com")'}
+          </div>
+          <div style="margin-top: 6px; font-size: 11px; color: #92400e;">
+            💡 Kalau dicentang, field "Konten Lengkap" di bawah jadi opsional (pengunjung akan diarahkan ke website asal saat klik).
+          </div>
+        </div>
+      </div>
       <div class="form-group">
         <label>Excerpt (Ringkasan) *</label>
         <textarea class="form-textarea" id="modal-excerpt" style="min-height: 60px;" required>${item.excerpt || ''}</textarea>
       </div>
-      <div class="form-group">
-        <label>Konten Lengkap *</label>
-        <textarea class="form-textarea" id="modal-content" required>${item.content || ''}</textarea>
+      <div class="form-group" id="content-group">
+        <label>Konten Lengkap <span id="content-required-mark">*</span></label>
+        <textarea class="form-textarea" id="modal-content">${item.content || ''}</textarea>
         <div class="form-hint">Pisahkan paragraf dengan baris kosong (enter 2x)</div>
       </div>
       <div class="form-group">
-        <label>Gambar Cover</label>
-        <select class="form-select" id="modal-pic">
-          ${PIC_OPTIONS.map(p => `<option value="${p}" ${item.pic === p ? 'selected' : ''}>${p.replace('pic-grad-', 'Gradient ')}</option>`).join('')}
-        </select>
+        <label>Cover (Gambar / Video)</label>
+        <input type="file" class="form-input" id="modal-cover" accept="image/*,video/*" onchange="previewBeritaCover(this)">
+        <div id="preview-cover" style="margin-top: 8px; ${item.cover ? '' : 'display:none;'}">
+          ${item.cover ? renderCoverPreview(item.cover) : ''}
+        </div>
+        <details style="margin-top: 8px; font-size: 12px;">
+          <summary style="cursor: pointer; color: var(--muted);">Atau pilih gradient bawaan (backward compat)</summary>
+          <select class="form-select" id="modal-pic" style="margin-top: 8px;">
+            <option value="">— Tidak pakai gradient —</option>
+            ${PIC_OPTIONS.map(p => `<option value="${p}" ${item.pic === p ? 'selected' : ''}>${p.replace('pic-grad-', 'Gradient ')}</option>`).join('')}
+          </select>
+        </details>
+        <div class="form-hint" style="margin-top: 6px;">
+          Gambar maks 5MB, Video maks 50MB. File disimpan sebagai base64. Upload baru = replace cover lama.
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -291,30 +319,200 @@ function formBerita(id = null) {
     </div>
   `;
   showModal(content);
+  // Sinkronkan required state saat buka modal
+  if (hasExternal) {
+    const ta = document.getElementById('modal-content');
+    if (ta) ta.removeAttribute('required');
+    const mark = document.getElementById('content-required-mark');
+    if (mark) mark.textContent = '(opsional)';
+  }
+}
+
+function toggleExternalFields(checked) {
+  const f = document.getElementById('external-fields');
+  const ta = document.getElementById('modal-content');
+  const mark = document.getElementById('content-required-mark');
+  if (checked) {
+    if (f) f.style.display = 'block';
+    if (ta) ta.removeAttribute('required');
+    if (mark) mark.textContent = '(opsional)';
+  } else {
+    if (f) f.style.display = 'none';
+    if (ta) ta.setAttribute('required', '');
+    if (mark) mark.textContent = '*';
+  }
+}
+
+function previewExternalSource(input) {
+  const target = document.getElementById('preview-external-source');
+  const url = input.value.trim();
+  if (!url) {
+    target.textContent = 'Paste URL lengkap, sumber akan otomatis terdeteksi (misal: kompas.com → "Kompas.com")';
+    return;
+  }
+  const source = getSourceFromUrl(url);
+  if (source) {
+    target.innerHTML = `Sumber: <strong>${source}</strong> ✅`;
+  } else {
+    target.innerHTML = '⚠️ URL tidak valid';
+  }
+}
+
+function getSourceFromUrl(url) {
+  try {
+    const u = new URL(url);
+    let host = u.hostname.replace(/^www\./, '');
+    // Map popular domains ke nama display
+    const map = {
+      'kompas.com': 'Kompas.com',
+      'detik.com': 'Detik.com',
+      'tempo.co': 'Tempo.co',
+      'cnnindonesia.com': 'CNN Indonesia',
+      'bbc.com': 'BBC',
+      'bbc.co.id': 'BBC Indonesia',
+      'cnbcindonesia.com': 'CNBC Indonesia',
+      'liputan6.com': 'Liputan6',
+      'antaranews.com': 'Antara News',
+      'republika.co.id': 'Republika',
+      'merdeka.com': 'Merdeka.com',
+      'suara.com': 'Suara.com',
+      'tribunnews.com': 'Tribun News',
+      'kumparan.com': 'Kumparan',
+      'okezone.com': 'Okezone'
+    };
+    for (const [key, val] of Object.entries(map)) {
+      if (host.includes(key)) return val;
+    }
+    // Fallback: capitalize first letter
+    return host.split('.').slice(-2, -1)[0].charAt(0).toUpperCase() + host.split('.').slice(-2, -1)[0].slice(1);
+  } catch (e) {
+    return null;
+  }
+}
+
+function renderCoverPreview(cover) {
+  if (!cover || !cover.data) return '';
+  if (cover.type && cover.type.startsWith('video')) {
+    return `<video src="${cover.data}" controls style="max-width: 100%; max-height: 200px; border-radius: 6px;"></video>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">📹 Cover tersimpan${cover.name ? ' — ' + cover.name : ''}</div>`;
+  }
+  return `<img src="${cover.data}" style="max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid var(--line);">
+          <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">🖼️ Cover tersimpan${cover.name ? ' — ' + cover.name : ''}</div>`;
+}
+
+function previewBeritaCover(input) {
+  const target = document.getElementById('preview-cover');
+  const file = input.files[0];
+  if (!file) { target.style.display = 'none'; target.innerHTML = ''; return; }
+  const isImage = file.type.startsWith('image/');
+  const isVideo = file.type.startsWith('video/');
+  if (!isImage && !isVideo) {
+    showToast('Format harus gambar atau video!', 'error');
+    input.value = '';
+    return;
+  }
+  const maxSize = isImage ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
+  if (file.size > maxSize) {
+    showToast(`Ukuran ${isImage ? 'gambar' : 'video'} terlalu besar! Maks ${isImage ? '5MB' : '50MB'}`, 'error');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    target.style.display = 'block';
+    target.innerHTML = renderCoverPreview({ type: file.type, name: file.name, data: e.target.result });
+  };
+  reader.readAsDataURL(file);
 }
 
 function simpanBerita(id) {
+  const isExternal = document.getElementById('modal-is-external').checked;
   const data = {
     judul: document.getElementById('modal-judul').value,
     kategori: document.getElementById('modal-kategori').value,
     tanggal: document.getElementById('modal-tanggal').value,
     excerpt: document.getElementById('modal-excerpt').value,
     content: document.getElementById('modal-content').value,
-    pic: document.getElementById('modal-pic').value
+    pic: document.getElementById('modal-pic').value || null
   };
-  if (!data.judul || !data.excerpt || !data.content) {
-    showToast('Lengkapi semua field wajib!', 'error');
+  if (!data.judul || !data.excerpt) {
+    showToast('Lengkapi judul dan excerpt!', 'error');
     return;
   }
-  if (id) {
-    updateItem('berita', id, data);
-    showToast('Berita berhasil diperbarui!', 'success');
-  } else {
-    addItem('berita', data);
-    showToast('Berita berhasil ditambahkan!', 'success');
+  if (!isExternal && !data.content) {
+    showToast('Konten lengkap wajib untuk berita internal!', 'error');
+    return;
   }
-  closeModal();
-  showPage('berita');
+
+  // External link
+  if (isExternal) {
+    const url = document.getElementById('modal-external-url').value.trim();
+    if (!url) {
+      showToast('URL berita eksternal wajib diisi!', 'error');
+      return;
+    }
+    if (!getSourceFromUrl(url)) {
+      showToast('URL tidak valid!', 'error');
+      return;
+    }
+    data.externalUrl = url;
+    data.source = getSourceFromUrl(url);
+  } else {
+    data.externalUrl = null;
+    data.source = null;
+  }
+
+  // Existing data (untuk edit)
+  const existing = id ? getData('berita').find(b => b.id === id) : null;
+  data.cover = existing ? existing.cover : null;
+
+  const coverInput = document.getElementById('modal-cover');
+
+  function readFileBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  (async () => {
+    try {
+      if (coverInput.files[0]) {
+        const f = coverInput.files[0];
+        const isImage = f.type.startsWith('image/');
+        const isVideo = f.type.startsWith('video/');
+        if (!isImage && !isVideo) {
+          showToast('Cover harus gambar atau video!', 'error');
+          return;
+        }
+        const maxSize = isImage ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
+        if (f.size > maxSize) {
+          showToast(`Cover terlalu besar! Maks ${isImage ? '5MB' : '50MB'}`, 'error');
+          return;
+        }
+        data.cover = {
+          type: f.type,
+          name: f.name,
+          size: f.size,
+          data: await readFileBase64(f)
+        };
+      }
+
+      if (id) {
+        updateItem('berita', id, data);
+        showToast('Berita diperbarui!', 'success');
+      } else {
+        addItem('berita', data);
+        showToast('Berita ditambahkan!', 'success');
+      }
+      closeModal();
+      showPage('berita');
+    } catch (err) {
+      showToast('Gagal membaca file: ' + err.message, 'error');
+    }
+  })();
 }
 
 // KLUB ADMIN

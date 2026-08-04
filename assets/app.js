@@ -28,6 +28,70 @@ function parseYouTubeUrl(url) {
   return null;
 }
 
+// Berita helpers (untuk index, berita, berita-detail)
+function getBeritaCoverStyle(b) {
+  if (b.cover && b.cover.data) {
+    if (b.cover.type && b.cover.type.startsWith('video')) {
+      return 'background: #000;';
+    }
+    return `background-image: url('${b.cover.data}'); background-size: cover; background-position: center;`;
+  }
+  return '';
+}
+
+function getBeritaCoverOverlay(b) {
+  if (b.cover && b.cover.data && b.cover.type && b.cover.type.startsWith('video')) {
+    return '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 32px; text-shadow: 0 2px 8px rgba(0,0,0,0.6); pointer-events: none;">▶</div>';
+  }
+  return '';
+}
+
+function getBeritaHref(b) {
+  if (b.externalUrl) return b.externalUrl;
+  return `berita-detail.html?id=${b.id}`;
+}
+
+function getBeritaTarget(b) {
+  return b.externalUrl ? 'target="_blank" rel="noopener"' : '';
+}
+
+function getBeritaBadge(b) {
+  if (b.externalUrl && b.source) {
+    return `<span class="tag" style="background: #f59e0b; color: #fff; margin-left: 6px;">📰 ${b.source}</span>`;
+  }
+  return '';
+}
+
+function getSourceFromUrl(url) {
+  try {
+    const u = new URL(url);
+    let host = u.hostname.replace(/^www\./, '');
+    const map = {
+      'kompas.com': 'Kompas.com',
+      'detik.com': 'Detik.com',
+      'tempo.co': 'Tempo.co',
+      'cnnindonesia.com': 'CNN Indonesia',
+      'bbc.com': 'BBC',
+      'bbc.co.id': 'BBC Indonesia',
+      'cnbcindonesia.com': 'CNBC Indonesia',
+      'liputan6.com': 'Liputan6',
+      'antaranews.com': 'Antara News',
+      'republika.co.id': 'Republika',
+      'merdeka.com': 'Merdeka.com',
+      'suara.com': 'Suara.com',
+      'tribunnews.com': 'Tribun News',
+      'kumparan.com': 'Kumparan',
+      'okezone.com': 'Okezone'
+    };
+    for (const [key, val] of Object.entries(map)) {
+      if (host.includes(key)) return val;
+    }
+    return host.split('.').slice(-2, -1)[0].charAt(0).toUpperCase() + host.split('.').slice(-2, -1)[0].slice(1);
+  } catch (e) {
+    return null;
+  }
+}
+
 // Get dynamic WA number from kontak data
 function getAdminWA() {
   try {

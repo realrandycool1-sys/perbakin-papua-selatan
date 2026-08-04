@@ -67,16 +67,28 @@ if (!berita) {
   document.title = berita.judul + ' — PERBAKIN Papua Selatan';
   document.getElementById('bc-current').textContent = berita.judul.length > 40 ? berita.judul.substring(0, 40) + '...' : berita.judul;
 
-  const paragraphs = berita.content.split('\n').filter(p => p.trim());
+  const paragraphs = (berita.content || '').split('\n').filter(p => p.trim());
+  const coverStyle = getBeritaCoverStyle(berita);
+  const coverOverlay = getBeritaCoverOverlay(berita);
+  const badge = getBeritaBadge(berita);
+  const externalNotice = berita.externalUrl
+    ? `<div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 20px 0; text-align: center;">
+        <strong>📰 Berita Eksternal</strong> — artikel ini bersumber dari <strong>${berita.source || 'website lain'}</strong>.<br>
+        <a href="${berita.externalUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top: 12px;">🔗 Baca Lengkap di ${berita.source || 'Website Asal'} →</a>
+      </div>` : '';
+  const heroHTML = berita.cover
+    ? `<div class="article-hero" style="${coverStyle}; border-radius: 16px; margin-bottom: 40px; aspect-ratio: 21/9; position: relative; overflow: hidden;">${coverOverlay}</div>`
+    : `<div class="article-hero ${berita.pic || 'pic-grad-1'}" style="border-radius: 16px; margin-bottom: 40px;"></div>`;
 
   document.getElementById('article-container').innerHTML = `
     <div class="wrapper" style="max-width: 800px;">
       <div style="text-align: center; margin-bottom: 24px;">
-        <span class="tag tag-red">${berita.kategori}</span>
+        <span class="tag tag-red">${berita.kategori}</span>${badge}
         <h1 class="serif" style="font-size: 42px; line-height: 1.15; margin: 12px 0 16px; max-width: 700px; margin-left: auto; margin-right: auto;">${berita.judul}</h1>
         <div class="text-muted text-sm">📅 ${formatDate(berita.tanggal)} &nbsp;·&nbsp; ✍️ Admin &nbsp;·&nbsp; 👁 <span id="view-count">${berita.views + 1}</span> dilihat</div>
       </div>
-      <div class="article-hero ${berita.pic}" style="border-radius: 16px; margin-bottom: 40px;"></div>
+      ${heroHTML}
+      ${externalNotice}
       <div class="article-content">
         ${paragraphs.map(p => `<p>${p}</p>`).join('')}
       </div>
@@ -93,12 +105,13 @@ if (!berita) {
   const others = related.length >= 3 ? related : getData('berita').filter(b => b.id !== berita.id).slice(0, 3);
 
   document.getElementById('related-container').innerHTML = others.map(b => `
-    <a href="berita-detail.html?id=${b.id}" class="news-card">
-      <div class="news-pic ${b.pic}">
-        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span></div>
+    <a href="${getBeritaHref(b)}" ${getBeritaTarget(b)} class="news-card">
+      <div class="news-pic ${b.cover ? '' : (b.pic || 'pic-grad-1')}" style="${getBeritaCoverStyle(b)} position: relative;">
+        ${getBeritaCoverOverlay(b)}
+        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span>${getBeritaBadge(b)}</div>
       </div>
       <div class="news-body">
-        <div class="cat">${b.kategori}</div>
+        <div class="cat">${b.kategori} ${b.externalUrl ? '· <span style="color: #f59e0b;">🔗 Eksternal</span>' : ''}</div>
         <h3>${b.judul}</h3>
         <p>${b.excerpt}</p>
         <div class="meta">📅 ${formatDate(b.tanggal)}</div>

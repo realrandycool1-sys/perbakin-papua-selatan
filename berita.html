@@ -77,15 +77,16 @@ function renderNews() {
   }
 
   document.getElementById('news-grid').innerHTML = items.map(b => `
-    <a href="berita-detail.html?id=${b.id}" class="news-card">
-      <div class="news-pic ${b.pic}">
-        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span></div>
+    <a href="${getBeritaHref(b)}" ${getBeritaTarget(b)} class="news-card">
+      <div class="news-pic ${b.cover ? '' : (b.pic || 'pic-grad-1')}" style="${getBeritaCoverStyle(b)} position: relative;">
+        ${getBeritaCoverOverlay(b)}
+        <div class="news-pic-label"><span class="tag tag-red">${b.kategori}</span>${getBeritaBadge(b)}</div>
       </div>
       <div class="news-body">
-        <div class="cat">${b.kategori}</div>
+        <div class="cat">${b.kategori} ${b.externalUrl ? '· <span style="color: #f59e0b;">🔗 Eksternal</span>' : ''}</div>
         <h3>${b.judul}</h3>
         <p>${b.excerpt}</p>
-        <div class="meta">📅 ${formatDate(b.tanggal)} · 👁 ${b.views}</div>
+        <div class="meta">📅 ${formatDate(b.tanggal)} · 👁 ${b.views || 0}</div>
       </div>
     </a>
   `).join('');
