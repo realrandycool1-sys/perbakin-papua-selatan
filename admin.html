@@ -594,6 +594,50 @@ function formKlub(id = null) {
         <label>Deskripsi</label>
         <textarea class="form-textarea" id="modal-deskripsi">${item.deskripsi || ''}</textarea>
       </div>
+      <div class="form-group">
+        <label>Logo Klub (opsional, maks 1MB)</label>
+        <input type="file" class="form-input" id="modal-logo" accept="image/*" onchange="previewKlubLogo(this)">
+        <div id="preview-logo" style="margin-top: 8px; ${item.logo ? '' : 'display:none;'}">
+          ${item.logo ? `<img src="${item.logo}" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid var(--line);">` : ''}
+        </div>
+      </div>
+      <details style="margin-top: 8px; background: #f8fafc; padding: 12px; border-radius: 8px;">
+        <summary style="cursor: pointer; font-weight: 600; color: var(--ink);">📋 Info Detail Klub (untuk halaman profil)</summary>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
+          <div class="form-group">
+            <label>Susunan Pengurus Utama</label>
+            <textarea class="form-textarea" id="modal-pengurus-detail" style="min-height: 80px;" placeholder="Ketua: Nama&#10;Wakil: Nama&#10;Sekretaris: Nama&#10;Bendahara: Nama">${item.pengurusDetail || ''}</textarea>
+            <div class="form-hint">Satu nama per baris, format: <code>Jabatan: Nama</code></div>
+          </div>
+          <div class="form-group">
+            <label>Daftar Atlet (nama & kategori)</label>
+            <textarea class="form-textarea" id="modal-atlet-detail" style="min-height: 80px;" placeholder="Maria Kaize - Air Rifle&#10;Yohanes B - Pistol&#10;...">${item.atletDetail || ''}</textarea>
+            <div class="form-hint">Satu atlet per baris, format: <code>Nama - Kategori</code></div>
+          </div>
+          <div class="form-group">
+            <label>Alamat Sekretariat</label>
+            <input type="text" class="form-input" id="modal-alamat" value="${item.alamat || ''}" placeholder="Jl. ...">
+          </div>
+          <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label>Telepon / WhatsApp</label>
+              <input type="text" class="form-input" id="modal-telp" value="${item.telp || ''}" placeholder="0853-xxx atau 628xxx">
+            </div>
+            <div>
+              <label>Email</label>
+              <input type="email" class="form-input" id="modal-email" value="${item.email || ''}" placeholder="klub@...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Media Sosial</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <input type="url" class="form-input" id="modal-instagram" value="${item.instagram || ''}" placeholder="Instagram URL">
+              <input type="url" class="form-input" id="modal-facebook" value="${item.facebook || ''}" placeholder="Facebook URL">
+              <input type="url" class="form-input" id="modal-youtube" value="${item.youtube || ''}" placeholder="YouTube URL">
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
@@ -601,6 +645,23 @@ function formKlub(id = null) {
     </div>
   `;
   showModal(content);
+}
+
+function previewKlubLogo(input) {
+  const target = document.getElementById('preview-logo');
+  const file = input.files[0];
+  if (!file) { target.style.display = 'none'; target.innerHTML = ''; return; }
+  if (file.size > 1 * 1024 * 1024) {
+    showToast('Logo maksimal 1MB!', 'error');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    target.style.display = 'block';
+    target.innerHTML = `<img src="${e.target.result}" style="max-width: 120px; max-height: 120px; border-radius: 8px; border: 1px solid var(--line);">`;
+  };
+  reader.readAsDataURL(file);
 }
 
 function simpanKlub(id) {
@@ -612,12 +673,58 @@ function simpanKlub(id) {
     atlet: parseInt(document.getElementById('modal-atlet').value),
     kategori: parseInt(document.getElementById('modal-kategori').value),
     status: document.getElementById('modal-status').value,
-    deskripsi: document.getElementById('modal-deskripsi').value
+    deskripsi: document.getElementById('modal-deskripsi').value,
+    pengurusDetail: document.getElementById('modal-pengurus-detail').value,
+    atletDetail: document.getElementById('modal-atlet-detail').value,
+    alamat: document.getElementById('modal-alamat').value,
+    telp: document.getElementById('modal-telp').value,
+    email: document.getElementById('modal-email').value,
+    instagram: document.getElementById('modal-instagram').value,
+    facebook: document.getElementById('modal-facebook').value,
+    youtube: document.getElementById('modal-youtube').value
   };
   if (!data.nama || !data.singkatan) {
     showToast('Lengkapi field wajib!', 'error');
     return;
   }
+
+  // Existing logo (untuk edit)
+  const existing = id ? getData('klub').find(k => k.id === id) : null;
+  data.logo = existing ? existing.logo : null;
+
+  const logoInput = document.getElementById('modal-logo');
+  function readFileBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  (async () => {
+    try {
+      if (logoInput.files[0]) {
+        if (logoInput.files[0].size > 1 * 1024 * 1024) {
+          showToast('Logo maksimal 1MB!', 'error');
+          return;
+        }
+        data.logo = await readFileBase64(logoInput.files[0]);
+      }
+      if (id) {
+        updateItem('klub', id, data);
+        showToast('Klub diperbarui!', 'success');
+      } else {
+        addItem('klub', data);
+        showToast('Klub ditambahkan!', 'success');
+      }
+      closeModal();
+      showPage('klub');
+    } catch (err) {
+      showToast('Gagal membaca file: ' + err.message, 'error');
+    }
+  })();
+}
   if (id) {
     updateItem('klub', id, data);
     showToast('Klub berhasil diperbarui!', 'success');

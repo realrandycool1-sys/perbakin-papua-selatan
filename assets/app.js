@@ -138,6 +138,7 @@ function renderHeader(active = '') {
     <div class="wrapper">
       <a href="index.html" class="${active === 'beranda' ? 'active' : ''}">Beranda</a>
       <a href="berita.html" class="${active === 'berita' ? 'active' : ''}">Berita</a>
+      <a href="klub.html" class="${active === 'klub' ? 'active' : ''}">Klub Menembak</a>
       <a href="organisasi.html" class="${active === 'organisasi' ? 'active' : ''}">Organisasi</a>
       <a href="pendaftaran.html" class="${active === 'pendaftaran' ? 'active' : ''}">Pendaftaran</a>
       <a href="galeri.html" class="${active === 'galeri' ? 'active' : ''}">Galeri</a>
@@ -190,6 +191,7 @@ function renderFooter() {
           <ul>
             <li><a href="index.html">Beranda</a></li>
             <li><a href="berita.html">Berita</a></li>
+            <li><a href="klub.html">Klub Menembak</a></li>
             <li><a href="galeri.html">Galeri</a></li>
             <li><a href="pendaftaran.html">Pendaftaran</a></li>
             <li><a href="kontak.html">Kontak</a></li>

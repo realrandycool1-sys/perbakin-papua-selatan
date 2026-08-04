@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Klub Menembak — PERBAKIN Papua Selatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .klub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .klub-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .klub-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px -8px rgba(0,0,0,0.1); border-color: var(--accent); }
+  .klub-logo { width: 80px; height: 80px; margin: 0 auto 16px; border-radius: 12px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--primary); overflow: hidden; }
+  .klub-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .klub-card h3 { font-family: 'DM Serif Display', serif; font-size: 18px; line-height: 1.2; margin-bottom: 6px; color: var(--ink); }
+  .klub-singkatan { font-size: 11px; color: var(--accent); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .klub-meta { font-size: 12px; color: var(--muted); margin: 12px 0; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .klub-desc { font-size: 13px; color: var(--ink-mid); line-height: 1.5; margin-top: 12px; }
+  .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  @media (max-width: 900px) { .klub-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .klub-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="app-header"></div>
+
+<section class="page-header" style="background: linear-gradient(135deg, var(--secondary), #1e293b); color: #fff; padding: 60px 0;">
+  <div class="wrapper">
+    <h1 class="serif" style="font-size: 42px; margin-bottom: 8px;">Klub Menembak</h1>
+    <p style="opacity: 0.9; font-size: 15px;">Klub-klub anggota resmi PERBAKIN Provinsi Papua Selatan</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrapper">
+    <div class="filter-bar" id="filter-kab">
+      <button class="filter-btn active" data-kab="all">Semua Kabupaten</button>
+      <button class="filter-btn" data-kab="Merauke">Merauke</button>
+      <button class="filter-btn" data-kab="Boven Digoel">Boven Digoel</button>
+      <button class="filter-btn" data-kab="Mappi">Mappi</button>
+      <button class="filter-btn" data-kab="Asmat">Asmat</button>
+    </div>
+    <div class="klub-grid" id="klub-grid"></div>
+  </div>
+</section>
+
+<div id="app-footer"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+mount('klub');
+
+let currentKab = 'all';
+function renderKlubList() {
+  let all = getData('klub');
+  if (currentKab !== 'all') all = all.filter(k => k.kabupaten === currentKab);
+  if (all.length === 0) {
+    document.getElementById('klub-grid').innerHTML = '<p class="text-muted text-center" style="grid-column: 1/-1; padding: 60px;">Belum ada klub di kabupaten ini.</p>';
+    return;
+  }
+  document.getElementById('klub-grid').innerHTML = all.map(k => `
+    <a href="klub-detail.html?id=${k.id}" class="klub-card">
+      <div class="klub-logo">${k.logo ? `<img src="${k.logo}" alt="${k.nama}">` : (k.singkatan || k.nama.substring(0, 2)).toUpperCase()}</div>
+      <div class="klub-singkatan">${k.singkatan || ''}</div>
+      <h3>${k.nama}</h3>
+      <div class="klub-meta">
+        <span>📍 ${k.kabupaten}</span>
+        <span>📅 ${k.tahun}</span>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+        <span class="tag ${k.status === 'Aktif' ? 'tag-green' : 'tag-amber'}" style="font-size: 10px;">${k.status}</span>
+        <span class="tag" style="background: #dbeafe; color: #1e40af; font-size: 10px;">${k.atlet} atlet</span>
+        <span class="tag" style="background: #fef3c7; color: #92400e; font-size: 10px;">${k.kategori} kategori</span>
+      </div>
+      ${k.deskripsi ? `<p class="klub-desc">${k.deskripsi.substring(0, 100)}${k.deskripsi.length > 100 ? '...' : ''}</p>` : ''}
+    </a>
+  `).join('');
+}
+
+document.querySelectorAll('#filter-kab .filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#filter-kab .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentKab = btn.dataset.kab;
+    renderKlubList();
+  });
+});
+
+renderKlubList();
+</script>
+</body>
+</html>

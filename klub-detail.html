@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Detail Klub — PERBAKIN Papua Selatan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .klub-hero {
+    background: linear-gradient(135deg, var(--secondary), #1e293b);
+    color: #fff;
+    padding: 60px 0 40px;
+  }
+  .klub-hero-inner {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+  .klub-hero-logo {
+    width: 140px; height: 140px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.1);
+    border: 3px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif; font-size: 48px; color: var(--accent);
+    overflow: hidden; flex-shrink: 0;
+  }
+  .klub-hero-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .klub-hero-info h1 { font-family: 'DM Serif Display', serif; font-size: 38px; line-height: 1.1; margin-bottom: 8px; }
+  .klub-hero-info .singkatan { font-size: 12px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .klub-hero-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px; font-size: 13px; opacity: 0.9; }
+  .klub-section { background: #fff; padding: 32px; border-radius: 16px; border: 1px solid var(--line); margin-bottom: 20px; }
+  .klub-section h2 { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 16px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .pengurus-list, .atlet-list { list-style: none; padding: 0; }
+  .pengurus-list li, .atlet-list li {
+    padding: 10px 14px;
+    background: var(--bg);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .pengurus-list li::before { content: "👤"; }
+  .atlet-list li::before { content: "🎯"; }
+  .kontak-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .kontak-item { display: flex; gap: 10px; align-items: start; padding: 10px; background: var(--bg); border-radius: 8px; }
+  .kontak-item .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .kontak-item .text { flex: 1; font-size: 13px; word-break: break-word; }
+  .kontak-item .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+  .sosmed-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sosmed-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    text-decoration: none;
+    color: #fff;
+    transition: opacity 0.2s;
+  }
+  .sosmed-btn:hover { opacity: 0.85; }
+  .sosmed-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+  .sosmed-fb { background: #1877f2; }
+  .sosmed-yt { background: #ff0000; }
+  .sosmed-wa { background: #25D366; }
+  @media (max-width: 700px) {
+    .klub-hero-inner { flex-direction: column; text-align: center; }
+    .kontak-grid { grid-template-columns: 1fr; }
+    .klub-hero-info h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app-header"></div>
+<div id="klub-detail-container"></div>
+<div id="app-footer"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+mount();
+
+const params = new URLSearchParams(window.location.search);
+const id = parseInt(params.get('id'));
+const klub = getData('klub').find(k => k.id === id);
+
+if (!klub) {
+  document.getElementById('klub-detail-container').innerHTML = `
+    <section class="section" style="text-align: center; padding: 100px 20px;">
+      <div class="wrapper">
+        <h1 class="serif" style="margin-bottom: 16px;">Klub Tidak Ditemukan</h1>
+        <p class="text-muted">Klub yang kamu cari tidak ada atau sudah dihapus.</p>
+        <a href="klub.html" class="btn btn-primary mt-6">← Kembali ke Daftar Klub</a>
+      </div>
+    </section>
+  `;
+} else {
+  document.title = klub.nama + ' — PERBAKIN Papua Selatan';
+
+  // Parse pengurus (format: "Jabatan: Nama" per line)
+  const pengurusList = (klub.pengurusDetail || '').split('\n').filter(l => l.trim()).map(line => {
+    const parts = line.split(':');
+    return parts.length > 1
+      ? `<li><strong>${parts[0].trim()}</strong> — ${parts.slice(1).join(':').trim()}</li>`
+      : `<li>${line.trim()}</li>`;
+  }).join('');
+
+  // Parse atlet (format: "Nama - Kategori" per line)
+  const atletList = (klub.atletDetail || '').split('\n').filter(l => l.trim()).map(line => {
+    const parts = line.split('-');
+    return parts.length > 1
+      ? `<li>${parts[0].trim()} <span style="color: var(--muted); font-size: 12px;">— ${parts.slice(1).join('-').trim()}</span></li>`
+      : `<li>${line.trim()}</li>`;
+  }).join('');
+
+  const waNumber = (klub.telp || '').replace(/\D/g, '');
+  const waLink = waNumber ? `https://wa.me/${waNumber.startsWith('0') ? '62' + waNumber.substring(1) : waNumber}` : null;
+
+  document.getElementById('klub-detail-container').innerHTML = `
+    <section class="klub-hero">
+      <div class="wrapper">
+        <div class="klub-hero-inner">
+          <div class="klub-hero-logo">${klub.logo ? `<img src="${klub.logo}" alt="${klub.nama}">` : (klub.singkatan || klub.nama.substring(0, 2)).toUpperCase()}</div>
+          <div class="klub-hero-info">
+            <div class="singkatan">${klub.singkatan || ''}</div>
+            <h1>${klub.nama}</h1>
+            <p style="opacity: 0.85; margin-top: 8px;">${klub.deskripsi || ''}</p>
+            <div class="klub-hero-meta">
+              <span>📍 ${klub.kabupaten}</span>
+              <span>📅 Berdiri ${klub.tahun}</span>
+              <span>👥 ${klub.atlet} atlet</span>
+              <span>🎯 ${klub.kategori} kategori</span>
+              <span class="tag ${klub.status === 'Aktif' ? 'tag-green' : 'tag-amber'}" style="font-size: 11px;">${klub.status}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrapper" style="max-width: 900px;">
+
+        ${pengurusList ? `
+        <div class="klub-section">
+          <h2>👤 Susunan Pengurus</h2>
+          <ul class="pengurus-list">${pengurusList}</ul>
+        </div>
+        ` : ''}
+
+        ${atletList ? `
+        <div class="klub-section">
+          <h2>🎯 Daftar Atlet</h2>
+          <ul class="atlet-list">${atletList}</ul>
+        </div>
+        ` : ''}
+
+        ${(klub.alamat || klub.telp || klub.email) ? `
+        <div class="klub-section">
+          <h2>📞 Kontak & Alamat</h2>
+          <div class="kontak-grid">
+            ${klub.alamat ? `
+            <div class="kontak-item">
+              <div class="icon" style="background: #fde7e7; color: #991b1b;">📍</div>
+              <div class="text">
+                <div class="label">Alamat</div>
+                ${klub.alamat}
+              </div>
+            </div>` : ''}
+            ${klub.telp ? `
+            <div class="kontak-item">
+              <div class="icon" style="background: #dcfce7; color: #15803d;">📱</div>
+              <div class="text">
+                <div class="label">Telepon / WhatsApp</div>
+                ${waLink ? `<a href="${waLink}" target="_blank" style="color: var(--ink);">${klub.telp}</a>` : klub.telp}
+              </div>
+            </div>` : ''}
+            ${klub.email ? `
+            <div class="kontak-item">
+              <div class="icon" style="background: #dbeafe; color: #1e40af;">✉️</div>
+              <div class="text">
+                <div class="label">Email</div>
+                <a href="mailto:${klub.email}" style="color: var(--ink);">${klub.email}</a>
+              </div>
+            </div>` : ''}
+          </div>
+          ${waLink ? `
+          <div style="margin-top: 16px;">
+            <a href="${waLink}" target="_blank" class="btn btn-wa">💬 Hubungi via WhatsApp</a>
+          </div>
+          ` : ''}
+        </div>
+        ` : ''}
+
+        ${(klub.instagram || klub.facebook || klub.youtube) ? `
+        <div class="klub-section">
+          <h2>🌐 Media Sosial</h2>
+          <div class="sosmed-row">
+            ${klub.instagram ? `<a href="${klub.instagram}" target="_blank" rel="noopener" class="sosmed-btn sosmed-ig">📷 Instagram</a>` : ''}
+            ${klub.facebook ? `<a href="${klub.facebook}" target="_blank" rel="noopener" class="sosmed-btn sosmed-fb">f Facebook</a>` : ''}
+            ${klub.youtube ? `<a href="${klub.youtube}" target="_blank" rel="noopener" class="sosmed-btn sosmed-yt">▶ YouTube</a>` : ''}
+            ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="sosmed-btn sosmed-wa">💬 WhatsApp</a>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <div style="text-align: center; margin-top: 32px;">
+          <a href="klub.html" class="btn btn-outline">← Kembali ke Daftar Klub</a>
+        </div>
+
+      </div>
+    </section>
+  `;
+}
+</script>
+</body>
+</html>
