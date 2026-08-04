@@ -5,6 +5,29 @@
 
 const ADMIN_WA = '6285344007008'; // Ganti dengan nomor admin asli
 
+// URL parsers (untuk embed video/link eksternal di lightbox)
+function parseGoogleDriveUrl(url) {
+  if (!url) return null;
+  let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  m = url.match(/\/uc\?.*id=([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  return null;
+}
+
+function parseYouTubeUrl(url) {
+  if (!url) return null;
+  let m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  m = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  return null;
+}
+
 // Get dynamic WA number from kontak data
 function getAdminWA() {
   try {
@@ -193,7 +216,34 @@ function flattenLightboxItems(items) {
           });
         }
       });
-    } else {
+    }
+    // Tambah video eksternal (YouTube / Google Drive) kalau ada
+    if (item.videoLink) {
+      const ytId = parseYouTubeUrl(item.videoLink);
+      const driveId = parseGoogleDriveUrl(item.videoLink);
+      if (ytId) {
+        lightboxFiles.push({
+          albumIdx, fileIdx: -2,
+          type: 'youtube',
+          name: 'YouTube',
+          data: `https://www.youtube.com/embed/${ytId}`,
+          judul: item.judul,
+          tanggal: item.tanggal,
+          kategori: item.kategori
+        });
+      } else if (driveId) {
+        lightboxFiles.push({
+          albumIdx, fileIdx: -3,
+          type: 'gdrive',
+          name: 'Google Drive',
+          data: `https://drive.google.com/file/d/${driveId}/preview`,
+          judul: item.judul,
+          tanggal: item.tanggal,
+          kategori: item.kategori
+        });
+      }
+    }
+    if ((!item.files || item.files.length === 0) && !item.videoLink) {
       // Legacy: gradient
       lightboxFiles.push({
         albumIdx, fileIdx: -1,
@@ -256,6 +306,10 @@ function updateLightbox() {
   const picEl = document.getElementById('lbPic');
   if (f.type === 'video' || (f.type && f.type.startsWith('video'))) {
     picEl.innerHTML = `<video src="${f.data}" controls autoplay style="max-width: 100%; max-height: 80vh;"></video>`;
+  } else if (f.type === 'youtube') {
+    picEl.innerHTML = `<iframe src="${f.data}?autoplay=1&rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="width: min(80vw, 700px); aspect-ratio: 16/9; max-height: 80vh;"></iframe>`;
+  } else if (f.type === 'gdrive') {
+    picEl.innerHTML = `<iframe src="${f.data}" frameborder="0" allow="autoplay" allowfullscreen style="width: min(80vw, 700px); aspect-ratio: 16/9; max-height: 80vh;"></iframe>`;
   } else if (f.type && f.type.startsWith('image')) {
     picEl.innerHTML = `<img src="${f.data}" style="max-width: 100%; max-height: 80vh; object-fit: contain;">`;
   } else {

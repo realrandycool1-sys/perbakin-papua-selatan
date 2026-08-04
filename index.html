@@ -423,19 +423,35 @@ function renderPengumuman() {
   return items.map(p => {
     const hasPdf = !!p.pdf;
     const hasImage = !!p.gambar;
-    const href = hasPdf ? p.pdf : '#';
-    const onclick = hasPdf
-      ? ''
-      : "event.preventDefault();showToast('File belum diupload','info')";
+    const hasDrive = !!p.driveLink;
+    // Prioritas: Drive link > PDF upload > nothing
+    let href, onclick, downloadAttr, linkLabel;
+    if (hasDrive) {
+      const id = parseGoogleDriveUrl(p.driveLink);
+      href = id ? `https://drive.google.com/uc?export=download&id=${id}` : p.driveLink;
+      onclick = "event.preventDefault();window.open('" + href + "','_blank')";
+      downloadAttr = '';
+      linkLabel = '☁️ Download via Google Drive';
+    } else if (hasPdf) {
+      href = p.pdf;
+      onclick = '';
+      downloadAttr = 'download="' + (p.pdfName || 'dokumen.pdf') + '"';
+      linkLabel = '⬇ ' + (p.pdfName || 'Download PDF');
+    } else {
+      href = '#';
+      onclick = "event.preventDefault();showToast('File belum diupload','info')";
+      downloadAttr = '';
+      linkLabel = '📄 Baca selengkapnya';
+    }
     return `
-    <a href="${href}" ${hasPdf ? 'download="' + (p.pdfName || 'dokumen.pdf') + '"' : 'onclick="' + onclick + '"'} class="peng-card">
+    <a href="${href}" ${downloadAttr} ${onclick ? 'onclick="' + onclick + '"' : ''} class="peng-card" ${hasDrive ? 'target="_blank"' : ''}>
       ${hasImage
         ? `<div class="peng-card-top" style="background-image: url('${p.gambar}'); background-size: cover; background-position: center;"></div>`
-        : `<div class="peng-card-top">${hasPdf ? 'PDF' : 'DOC'}</div>`}
+        : `<div class="peng-card-top">${hasDrive ? '☁️' : (hasPdf ? 'PDF' : 'DOC')}</div>`}
       <div class="peng-card-body">
         <div class="date">📅 ${formatDate(p.tanggal)}</div>
         <h4>${p.judul}</h4>
-        <div class="dl">${hasPdf ? '⬇ ' + (p.pdfName || 'Download PDF') : '📄 Baca selengkapnya'}</div>
+        <div class="dl">${linkLabel}</div>
       </div>
     </a>
   `;

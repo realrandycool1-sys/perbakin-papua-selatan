@@ -566,15 +566,25 @@ function formPengumuman(id = null) {
           ${item.pdf ? `📄 <strong>${item.pdfName || 'File PDF'}</strong> <span style="color: var(--muted);">(tersimpan)</span>` : ''}
         </div>
       </div>
+      <div class="form-group" style="background: #f0f9ff; padding: 12px; border-radius: 8px; border: 1px dashed #3b82f6;">
+        <label style="color: #1e40af;">🔗 Link Google Drive (opsional, untuk file besar)</label>
+        <input type="url" class="form-input" id="modal-drive-link" value="${item.driveLink || ''}" placeholder="https://drive.google.com/file/d/..." oninput="previewDriveLink(this)">
+        <div id="preview-drive" style="margin-top: 8px; font-size: 12px; color: var(--muted);">
+          ${item.driveLink ? `✅ <strong>Link Drive tersimpan</strong>${parseGoogleDriveUrl(item.driveLink) ? ' (file ID valid)' : ' (format URL tidak dikenali)'}` : 'Paste link share Google Drive (pastikan sudah di-share "Siapa saja yang memiliki link")'}
+        </div>
+        <div style="margin-top: 6px; font-size: 11px; color: #475569;">
+          💡 <strong>Prioritas:</strong> kalau link Drive diisi, link itu yang dipakai untuk download (file PDF diabaikan). Cocok untuk PDF &gt; 5MB.
+        </div>
+      </div>
       <div style="background: #fef3c7; border-left: 3px solid #f59e0b; padding: 12px; border-radius: 6px; margin-top: 12px; font-size: 12px; color: #78350f;">
         <strong>⚠️ PENTING — Limit Browser:</strong><br>
         File disimpan sebagai <strong>base64 di localStorage browser</strong>, bukan di server. Browser punya batas <strong>~5-10MB per origin</strong>.<br><br>
-        <strong>Untuk file &gt; 5MB:</strong> upload ke Google Drive / Dropbox, lalu simpan sebagai <strong>link eksternal</strong> (fitur ini akan datang).<br>
+        <strong>Untuk file &gt; 5MB:</strong> gunakan <strong>link Google Drive</strong> di atas (disarankan).<br>
         <strong>Risiko file 100MB:</strong> base64 = 133MB string, akan <strong>mengisi localStorage &amp; menyebabkan data hilang</strong>.
       </div>
       <p class="text-muted" style="font-size: 12px; margin-top: 8px;">
         · File disimpan sebagai base64 di browser (tidak upload ke server)<br>
-        · Kosongkan field upload = gunakan file lama (saat edit) atau tidak ada file (saat tambah)
+        · Kosongkan field upload/link = gunakan data lama (saat edit) atau tidak ada file (saat tambah)
       </p>
     </div>
     <div class="modal-footer">
@@ -622,6 +632,75 @@ function previewPdf(input, targetId) {
   target.innerHTML = `📄 <strong>${file.name}</strong> <span style="color: var(--muted);">(${(file.size/1024/1024).toFixed(2)} MB — siap diupload)</span>`;
 }
 
+// Google Drive helpers
+function parseGoogleDriveUrl(url) {
+  if (!url) return null;
+  // Format 1: https://drive.google.com/file/d/FILE_ID/view
+  let m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  // Format 2: https://drive.google.com/open?id=FILE_ID
+  m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  // Format 3: https://drive.google.com/uc?id=FILE_ID&export=download
+  m = url.match(/\/uc\?.*id=([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  return null;
+}
+
+function getGoogleDriveDirectUrl(url) {
+  const id = parseGoogleDriveUrl(url);
+  if (!id) return url;
+  return `https://drive.google.com/uc?export=download&id=${id}`;
+}
+
+function previewDriveLink(input) {
+  const target = document.getElementById('preview-drive');
+  const url = input.value.trim();
+  if (!url) {
+    target.innerHTML = 'Paste link share Google Drive (pastikan sudah di-share "Siapa saja yang memiliki link")';
+    return;
+  }
+  const id = parseGoogleDriveUrl(url);
+  if (id) {
+    target.innerHTML = `✅ <strong>Link valid</strong> — File ID: <code>${id}</code>`;
+  } else {
+    target.innerHTML = `⚠️ Format URL tidak dikenali. Pastikan link dari Google Drive (format: drive.google.com/file/d/...)`;
+  }
+}
+
+function previewVideoLink(input) {
+  const target = document.getElementById('preview-video-link');
+  const url = input.value.trim();
+  if (!url) {
+    target.innerHTML = 'Mendukung YouTube (youtu.be / youtube.com/watch) dan Google Drive. Untuk video &gt; 50MB.';
+    return;
+  }
+  if (parseYouTubeUrl(url)) {
+    target.innerHTML = '✅ YouTube link valid — akan di-embed otomatis';
+  } else if (parseGoogleDriveUrl(url)) {
+    target.innerHTML = '✅ Google Drive link valid — akan di-embed otomatis';
+  } else {
+    target.innerHTML = '⚠️ Format tidak dikenali. Gunakan YouTube atau Google Drive saja.';
+  }
+}
+
+// YouTube helpers
+function parseYouTubeUrl(url) {
+  if (!url) return null;
+  let m = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  m = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
+  if (m) return m[1];
+  return null;
+}
+
+function getYouTubeEmbedUrl(url) {
+  const id = parseYouTubeUrl(url);
+  return id ? `https://www.youtube.com/embed/${id}` : url;
+}
+
 function simpanPengumuman(id) {
   const data = {
     judul: document.getElementById('modal-judul').value,
@@ -634,6 +713,7 @@ function simpanPengumuman(id) {
   data.gambar = existing ? existing.gambar : null;
   data.pdf = existing ? existing.pdf : null;
   data.pdfName = existing ? existing.pdfName : null;
+  data.driveLink = existing ? existing.driveLink : null;
 
   const gambarInput = document.getElementById('modal-gambar');
   const pdfInput = document.getElementById('modal-pdf');
@@ -665,6 +745,22 @@ function simpanPengumuman(id) {
         }
         data.pdf = await readFileBase64(pdfInput.files[0]);
         data.pdfName = pdfInput.files[0].name;
+      }
+
+      // Drive link (prioritas atas PDF upload)
+      const driveInput = document.getElementById('modal-drive-link');
+      if (driveInput) {
+        const link = driveInput.value.trim();
+        if (link) {
+          if (parseGoogleDriveUrl(link)) {
+            data.driveLink = link;
+          } else {
+            showToast('Format link Google Drive tidak valid!', 'error');
+            return;
+          }
+        } else {
+          data.driveLink = null;
+        }
       }
 
       if (id) {
@@ -722,6 +818,16 @@ function formGaleri(id = null) {
         <div id="preview-files" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px;"></div>
         <div id="files-info" style="margin-top: 8px; font-size: 12px; color: var(--muted);"></div>
         ${existingFiles.length > 0 && existingFiles[0].data ? `<div style="margin-top: 12px; padding: 8px; background: #f0f9ff; border-radius: 6px; font-size: 12px;">📁 ${existingFiles.length} file tersimpan (kosongkan upload = tetap pakai file lama)</div>` : ''}
+      </div>
+      <div class="form-group" style="background: #f0f9ff; padding: 12px; border-radius: 8px; border: 1px dashed #3b82f6;">
+        <label style="color: #1e40af;">🎬 Link Video (opsional, untuk video besar dari YouTube / Google Drive)</label>
+        <input type="url" class="form-input" id="modal-video-link" value="${item.videoLink || ''}" placeholder="https://youtu.be/... atau https://drive.google.com/file/d/..." oninput="previewVideoLink(this)">
+        <div id="preview-video-link" style="margin-top: 8px; font-size: 12px; color: var(--muted);">
+          ${item.videoLink ? (parseYouTubeUrl(item.videoLink) ? '✅ YouTube valid' : (parseGoogleDriveUrl(item.videoLink) ? '✅ Google Drive valid' : '⚠️ Format tidak dikenali')) : 'Mendukung YouTube (youtu.be / youtube.com/watch) dan Google Drive. Untuk video &gt; 50MB.'}
+        </div>
+        <div style="margin-top: 6px; font-size: 11px; color: #475569;">
+          💡 Video dari link ini akan di-embed di lightbox saat dibuka. Upload lokal diprioritaskan kalau ada.
+        </div>
       </div>
       <p class="text-muted" style="font-size: 12px; margin-top: 8px;">
         · Foto: maks 5MB per file<br>
@@ -793,6 +899,7 @@ function simpanGaleri(id) {
   // Existing data (untuk edit)
   const existing = id ? getData('galeri').find(g => g.id === id) : null;
   data.files = existing && existing.files ? existing.files : [];
+  data.videoLink = existing && existing.videoLink ? existing.videoLink : null;
 
   const filesInput = document.getElementById('modal-files');
   const newFiles = filesInput.files ? Array.from(filesInput.files).slice(0, 10) : [];
@@ -837,6 +944,26 @@ function simpanGaleri(id) {
       } else {
         // Edit tanpa upload: pakai kategori existing
         data.kategori = existing.kategori || 'Foto';
+      }
+
+      // Video link (YouTube / Google Drive)
+      const videoInput = document.getElementById('modal-video-link');
+      if (videoInput) {
+        const link = videoInput.value.trim();
+        if (link) {
+          if (parseYouTubeUrl(link) || parseGoogleDriveUrl(link)) {
+            data.videoLink = link;
+            // Kalau gak ada file upload & ada link, set kategori ke Video
+            if (newFiles.length === 0 && (!data.files || data.files.length === 0)) {
+              data.kategori = 'Video';
+            }
+          } else {
+            showToast('Format link video tidak valid (YouTube/Google Drive only)!', 'error');
+            return;
+          }
+        } else {
+          data.videoLink = null;
+        }
       }
 
       if (id) {
