@@ -445,15 +445,21 @@ document.getElementById('pengumuman-container').innerHTML = renderPengumuman();
 
 function renderGaleriHome() {
   const items = getData('galeri').slice(0, 4);
-  return items.map(g => `
-    <div class="galeri-card" onclick="openLightbox(getData('galeri'), ${g.id - 1})">
-      <div class="galeri-pic ${g.pic}"></div>
+  return items.map(g => {
+    const cover = (g.files && g.files.length > 0 && g.files[0].data) ? g.files[0].data : null;
+    const hasVid = g.files && g.files.some(f => f.type && f.type.startsWith('video/'));
+    return `
+    <div class="galeri-card" onclick="openLightbox(getData('galeri'), ${getData('galeri').findIndex(x => x.id === g.id)})">
+      ${cover
+        ? `<div class="galeri-pic" style="background-image: url('${cover}'); background-size: cover; background-position: center; position: relative;">${hasVid ? '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 28px; text-shadow: 0 2px 8px rgba(0,0,0,0.6);">▶</div>' : ''}</div>`
+        : `<div class="galeri-pic ${g.pic || 'pic-grad-1'}"></div>`}
       <div class="galeri-card-body">
-        <div class="cat">📷 ${g.kategori}</div>
+        <div class="cat">${g.kategori === 'Video' ? '🎬' : '📷'} ${g.kategori} ${g.files ? `· ${g.files.length} file` : ''}</div>
         <h4>${g.judul}</h4>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 document.getElementById('galeri-home').innerHTML = renderGaleriHome();
 </script>

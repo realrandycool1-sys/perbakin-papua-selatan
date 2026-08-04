@@ -52,16 +52,22 @@ function renderGaleri() {
     document.getElementById('galeri-grid').innerHTML = '<p class="text-muted text-center" style="grid-column: 1/-1; padding: 60px;">Belum ada foto dalam kategori ini.</p>';
     return;
   }
-  document.getElementById('galeri-grid').innerHTML = all.map(g => `
+  document.getElementById('galeri-grid').innerHTML = all.map(g => {
+    const cover = (g.files && g.files.length > 0 && g.files[0].data) ? g.files[0].data : null;
+    const hasVid = g.files && g.files.some(f => f.type && f.type.startsWith('video/'));
+    return `
     <div class="galeri-card" onclick="openLightbox(getData('galeri'), ${getData('galeri').findIndex(x => x.id === g.id)})">
-      <div class="galeri-pic ${g.pic}"></div>
+      ${cover
+        ? `<div class="galeri-pic" style="background-image: url('${cover}'); background-size: cover; background-position: center; position: relative;">${hasVid ? '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 32px; text-shadow: 0 2px 8px rgba(0,0,0,0.6);">▶</div>' : ''}</div>`
+        : `<div class="galeri-pic ${g.pic || 'pic-grad-1'}"></div>`}
       <div class="galeri-card-body">
-        <div class="cat">📷 ${g.kategori}</div>
+        <div class="cat">${g.kategori === 'Video' ? '🎬' : '📷'} ${g.kategori}${g.files ? ` · ${g.files.length} file` : ''}</div>
         <h4>${g.judul}</h4>
         <div class="text-xs text-muted" style="margin-top: 4px;">${formatDate(g.tanggal)}</div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 document.querySelectorAll('#filter-galeri .filter-btn').forEach(btn => {

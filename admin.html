@@ -560,15 +560,20 @@ function formPengumuman(id = null) {
         </div>
       </div>
       <div class="form-group">
-        <label>File PDF (opsional, maks 2MB)</label>
+        <label>File PDF (opsional, maks 100MB)</label>
         <input type="file" class="form-input" id="modal-pdf" accept="application/pdf" onchange="previewPdf(this, 'preview-pdf')">
         <div id="preview-pdf" style="margin-top: 8px; font-size: 13px; color: var(--ink-mid); ${item.pdf ? '' : 'display:none;'}">
           ${item.pdf ? `📄 <strong>${item.pdfName || 'File PDF'}</strong> <span style="color: var(--muted);">(tersimpan)</span>` : ''}
         </div>
       </div>
+      <div style="background: #fef3c7; border-left: 3px solid #f59e0b; padding: 12px; border-radius: 6px; margin-top: 12px; font-size: 12px; color: #78350f;">
+        <strong>⚠️ PENTING — Limit Browser:</strong><br>
+        File disimpan sebagai <strong>base64 di localStorage browser</strong>, bukan di server. Browser punya batas <strong>~5-10MB per origin</strong>.<br><br>
+        <strong>Untuk file &gt; 5MB:</strong> upload ke Google Drive / Dropbox, lalu simpan sebagai <strong>link eksternal</strong> (fitur ini akan datang).<br>
+        <strong>Risiko file 100MB:</strong> base64 = 133MB string, akan <strong>mengisi localStorage &amp; menyebabkan data hilang</strong>.
+      </div>
       <p class="text-muted" style="font-size: 12px; margin-top: 8px;">
         · File disimpan sebagai base64 di browser (tidak upload ke server)<br>
-        · Total localStorage terbatas ~5MB, jangan upload banyak file besar sekaligus<br>
         · Kosongkan field upload = gunakan file lama (saat edit) atau tidak ada file (saat tambah)
       </p>
     </div>
@@ -608,13 +613,13 @@ function previewPdf(input, targetId) {
     target.innerHTML = '';
     return;
   }
-  if (file.size > 2 * 1024 * 1024) {
-    showToast('Ukuran PDF maksimal 2MB!', 'error');
+  if (file.size > 100 * 1024 * 1024) {
+    showToast('Ukuran PDF maksimal 100MB!', 'error');
     input.value = '';
     return;
   }
   target.style.display = 'block';
-  target.innerHTML = `📄 <strong>${file.name}</strong> <span style="color: var(--muted);">(${(file.size/1024).toFixed(1)} KB — siap diupload)</span>`;
+  target.innerHTML = `📄 <strong>${file.name}</strong> <span style="color: var(--muted);">(${(file.size/1024/1024).toFixed(2)} MB — siap diupload)</span>`;
 }
 
 function simpanPengumuman(id) {
@@ -654,8 +659,8 @@ function simpanPengumuman(id) {
         data.gambar = await readFileBase64(gambarInput.files[0]);
       }
       if (pdfInput.files[0]) {
-        if (pdfInput.files[0].size > 2 * 1024 * 1024) {
-          showToast('Ukuran PDF maksimal 2MB!', 'error');
+        if (pdfInput.files[0].size > 100 * 1024 * 1024) {
+          showToast('Ukuran PDF maksimal 100MB!', 'error');
           return;
         }
         data.pdf = await readFileBase64(pdfInput.files[0]);
@@ -705,22 +710,26 @@ function renderGaleriAdmin() {
 
 function formGaleri(id = null) {
   const item = id ? getData('galeri').find(g => g.id === id) : {};
+  const existingFiles = item.files || (item.pic ? [{ type: 'gradient', name: item.pic, data: null }] : []);
   showModal(`
-    <div class="modal-header"><h3>${id ? 'Edit' : 'Tambah'} Foto</h3><button onclick="closeModal()" style="font-size: 24px;">✕</button></div>
+    <div class="modal-header"><h3>${id ? 'Edit' : 'Tambah'} Galeri</h3><button onclick="closeModal()" style="font-size: 24px;">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Judul *</label><input type="text" class="form-input" id="modal-judul" value="${item.judul || ''}" required></div>
+      <div class="form-group"><label>Judul Album / Kegiatan *</label><input type="text" class="form-input" id="modal-judul" value="${item.judul || ''}" required placeholder="Contoh: Kejuaraan Daerah 2026"></div>
       <div class="form-group"><label>Tanggal *</label><input type="date" class="form-input" id="modal-tanggal" value="${item.tanggal || new Date().toISOString().split('T')[0]}" required></div>
-      <div class="form-group"><label>Kategori *</label>
-        <select class="form-select" id="modal-kategori">
-          <option ${item.kategori === 'Foto' ? 'selected' : ''}>Foto</option>
-          <option ${item.kategori === 'Video' ? 'selected' : ''}>Video</option>
-        </select>
+      <div class="form-group">
+        <label>Upload Foto & Video (maks 10 file)</label>
+        <input type="file" class="form-input" id="modal-files" accept="image/*,video/*" multiple onchange="previewGaleriFiles(this)">
+        <div id="preview-files" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px;"></div>
+        <div id="files-info" style="margin-top: 8px; font-size: 12px; color: var(--muted);"></div>
+        ${existingFiles.length > 0 && existingFiles[0].data ? `<div style="margin-top: 12px; padding: 8px; background: #f0f9ff; border-radius: 6px; font-size: 12px;">📁 ${existingFiles.length} file tersimpan (kosongkan upload = tetap pakai file lama)</div>` : ''}
       </div>
-      <div class="form-group"><label>Gambar</label>
-        <select class="form-select" id="modal-pic">
-          ${PIC_OPTIONS.map(p => `<option value="${p}" ${item.pic === p ? 'selected' : ''}>${p.replace('pic-grad-', 'Gradient ')}</option>`).join('')}
-        </select>
-      </div>
+      <p class="text-muted" style="font-size: 12px; margin-top: 8px;">
+        · Foto: maks 5MB per file<br>
+        · Video: maks 50MB per file<br>
+        · Total maks 10 file (foto + video gabungan)<br>
+        · File disimpan sebagai base64 di browser (tidak upload ke server)<br>
+        · Total localStorage ~5MB, jangan upload terlalu banyak file besar
+      </p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
@@ -729,23 +738,120 @@ function formGaleri(id = null) {
   `);
 }
 
+function previewGaleriFiles(input) {
+  const files = input.files;
+  const preview = document.getElementById('preview-files');
+  const info = document.getElementById('files-info');
+  preview.innerHTML = '';
+  if (!files.length) { info.textContent = ''; return; }
+
+  if (files.length > 10) {
+    showToast('Maksimal 10 file! Kelebihan file akan diabaikan.', 'error');
+  }
+  const valid = Array.from(files).slice(0, 10);
+
+  valid.forEach((file, i) => {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (!isImage && !isVideo) return;
+
+    // Validate size
+    const maxSize = isImage ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showToast(`${file.name} terlalu besar!`, 'error');
+      return;
+    }
+
+    const div = document.createElement('div');
+    div.style.cssText = 'position: relative; aspect-ratio: 1; background: var(--bg); border-radius: 6px; overflow: hidden; border: 1px solid var(--line);';
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (isImage) {
+        div.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+      } else {
+        div.innerHTML = `<video src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" muted></video><div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">▶</div>`;
+      }
+      div.innerHTML += `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 2px 4px;">${isImage ? '📷' : '🎬'} ${(file.size/1024).toFixed(0)}KB</div>`;
+    };
+    reader.readAsDataURL(file);
+    preview.appendChild(div);
+  });
+
+  info.innerHTML = `<strong>${valid.length} file</strong> dipilih (${isImageCount(valid)} foto, ${isVideoCount(valid)} video)`;
+}
+
+function isImageCount(files) { return Array.from(files).filter(f => f.type.startsWith('image/')).length; }
+function isVideoCount(files) { return Array.from(files).filter(f => f.type.startsWith('video/')).length; }
+
 function simpanGaleri(id) {
   const data = {
     judul: document.getElementById('modal-judul').value,
-    tanggal: document.getElementById('modal-tanggal').value,
-    kategori: document.getElementById('modal-kategori').value,
-    pic: document.getElementById('modal-pic').value
+    tanggal: document.getElementById('modal-tanggal').value
   };
   if (!data.judul) { showToast('Lengkapi field!', 'error'); return; }
-  if (id) {
-    updateItem('galeri', id, data);
-    showToast('Foto diperbarui!', 'success');
-  } else {
-    addItem('galeri', data);
-    showToast('Foto ditambahkan!', 'success');
+
+  // Existing data (untuk edit)
+  const existing = id ? getData('galeri').find(g => g.id === id) : null;
+  data.files = existing && existing.files ? existing.files : [];
+
+  const filesInput = document.getElementById('modal-files');
+  const newFiles = filesInput.files ? Array.from(filesInput.files).slice(0, 10) : [];
+
+  // Helper
+  function readFileBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
-  closeModal();
-  showPage('galeri');
+
+  (async () => {
+    try {
+      if (newFiles.length > 0) {
+        // Validasi
+        for (const f of newFiles) {
+          const isImage = f.type.startsWith('image/');
+          const isVideo = f.type.startsWith('video/');
+          if (!isImage && !isVideo) {
+            showToast(`Format ${f.name} tidak didukung!`, 'error');
+            return;
+          }
+          const maxSize = isImage ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
+          if (f.size > maxSize) {
+            showToast(`${f.name} terlalu besar! Maks ${isImage ? '5MB' : '50MB'}`, 'error');
+            return;
+          }
+        }
+        // Convert semua
+        const fileEntries = await Promise.all(newFiles.map(async (f) => ({
+          type: f.type,
+          name: f.name,
+          size: f.size,
+          data: await readFileBase64(f)
+        })));
+        data.files = fileEntries;
+        // Auto-kategori berdasarkan file pertama
+        data.kategori = fileEntries[0].type.startsWith('image/') ? 'Foto' : 'Video';
+      } else {
+        // Edit tanpa upload: pakai kategori existing
+        data.kategori = existing.kategori || 'Foto';
+      }
+
+      if (id) {
+        updateItem('galeri', id, data);
+        showToast('Galeri diperbarui!', 'success');
+      } else {
+        addItem('galeri', data);
+        showToast(`Galeri ditambahkan (${data.files.length} file)!`, 'success');
+      }
+      closeModal();
+      showPage('galeri');
+    } catch (err) {
+      showToast('Gagal membaca file: ' + err.message, 'error');
+    }
+  })();
 }
 
 // KONTAK ADMIN

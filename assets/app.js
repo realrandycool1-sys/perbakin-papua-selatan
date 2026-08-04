@@ -174,10 +174,42 @@ function showToast(message, type = 'info') {
 // Lightbox
 let lightboxItems = [];
 let lightboxIndex = 0;
+let lightboxFiles = []; // flattened list of {albumIdx, fileIdx, data, type, name}
+
+function flattenLightboxItems(items) {
+  lightboxFiles = [];
+  items.forEach((item, albumIdx) => {
+    if (item.files && item.files.length > 0) {
+      item.files.forEach((f, fileIdx) => {
+        if (f.data) {
+          lightboxFiles.push({
+            albumIdx, fileIdx,
+            type: f.type,
+            name: f.name,
+            data: f.data,
+            judul: item.judul,
+            tanggal: item.tanggal,
+            kategori: item.kategori
+          });
+        }
+      });
+    } else {
+      // Legacy: gradient
+      lightboxFiles.push({
+        albumIdx, fileIdx: -1,
+        type: 'gradient',
+        name: item.pic,
+        data: null,
+        judul: item.judul,
+        tanggal: item.tanggal,
+        kategori: item.kategori
+      });
+    }
+  });
+}
 
 function openLightbox(items, index) {
   lightboxItems = items;
-  lightboxIndex = index;
   let lb = document.getElementById('lightbox');
   if (!lb) {
     lb = document.createElement('div');
@@ -188,10 +220,11 @@ function openLightbox(items, index) {
       <button class="lightbox-nav prev" onclick="navigateLightbox(-1)">‹</button>
       <button class="lightbox-nav next" onclick="navigateLightbox(1)">›</button>
       <div class="lightbox-content">
-        <div class="gradient" id="lbPic"></div>
+        <div id="lbPic" style="width: min(80vw, 700px); aspect-ratio: 1; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden;"></div>
         <div class="lightbox-info">
           <div class="title" id="lbTitle"></div>
           <div id="lbMeta"></div>
+          <div id="lbCounter" style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;"></div>
         </div>
       </div>
     `;
@@ -204,25 +237,52 @@ function openLightbox(items, index) {
       if (e.key === 'ArrowRight') navigateLightbox(1);
     });
   }
+  flattenLightboxItems(items);
+  // index = album index, find first file of that album
+  if (index >= 0 && index < items.length) {
+    const found = lightboxFiles.findIndex(f => f.albumIdx === index);
+    if (found >= 0) lightboxIndex = found;
+    else lightboxIndex = 0;
+  } else {
+    lightboxIndex = 0;
+  }
   updateLightbox();
   lb.classList.add('active');
 }
 
 function updateLightbox() {
-  const item = lightboxItems[lightboxIndex];
-  document.getElementById('lbPic').className = 'gradient ' + item.pic;
-  document.getElementById('lbTitle').textContent = item.judul;
-  document.getElementById('lbMeta').textContent = item.kategori + ' · ' + formatDate(item.tanggal);
+  const f = lightboxFiles[lightboxIndex];
+  if (!f) return;
+  const picEl = document.getElementById('lbPic');
+  if (f.type === 'video' || (f.type && f.type.startsWith('video'))) {
+    picEl.innerHTML = `<video src="${f.data}" controls autoplay style="max-width: 100%; max-height: 80vh;"></video>`;
+  } else if (f.type && f.type.startsWith('image')) {
+    picEl.innerHTML = `<img src="${f.data}" style="max-width: 100%; max-height: 80vh; object-fit: contain;">`;
+  } else {
+    // Legacy gradient
+    picEl.innerHTML = '';
+    picEl.className = 'gradient ' + f.name;
+  }
+  document.getElementById('lbTitle').textContent = f.judul;
+  const metaParts = [(f.kategori || ''), formatDate(f.tanggal)];
+  if (f.name && f.type !== 'gradient') metaParts.push(f.name);
+  document.getElementById('lbMeta').textContent = metaParts.filter(Boolean).join(' · ');
+  document.getElementById('lbCounter').textContent = (lightboxIndex + 1) + ' / ' + lightboxFiles.length;
 }
 
 function navigateLightbox(dir) {
-  lightboxIndex = (lightboxIndex + dir + lightboxItems.length) % lightboxItems.length;
+  if (lightboxFiles.length === 0) return;
+  lightboxIndex = (lightboxIndex + dir + lightboxFiles.length) % lightboxFiles.length;
   updateLightbox();
 }
 
 function closeLightbox() {
   const lb = document.getElementById('lightbox');
-  if (lb) lb.classList.remove('active');
+  if (lb) {
+    lb.classList.remove('active');
+    const picEl = document.getElementById('lbPic');
+    if (picEl) picEl.innerHTML = ''; // stop video
+  }
 }
 
 // Global search
