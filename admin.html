@@ -28,14 +28,14 @@
     </div>
     <h2>Login Admin</h2>
     <p>Login khusus pengurus</p>
-    <form onsubmit="doLogin(event)">
+    <form onsubmit="doLogin(event)" autocomplete="off">
       <div class="form-group">
         <label>Username</label>
-        <input type="text" class="form-input" id="login-user" value="superadmin" required autocomplete="username">
+        <input type="text" class="form-input" id="login-user" value="superadmin" required autocomplete="off">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" class="form-input" id="login-pass" placeholder="Masukkan password" required autocomplete="current-password">
+        <input type="password" class="form-input" id="login-pass" placeholder="Masukkan password" required autocomplete="new-password">
       </div>
       <button type="submit" class="btn btn-primary btn-block btn-lg">🔐 Login</button>
     </form>
@@ -78,6 +78,16 @@
 <script>
 let currentPage = 'dashboard';
 const PIC_OPTIONS = ['pic-grad-1', 'pic-grad-2', 'pic-grad-3', 'pic-grad-4', 'pic-grad-5', 'pic-grad-6', 'pic-grad-7', 'pic-grad-8'];
+
+// Auto-skip login screen kalau sudah login
+if (sessionStorage.getItem('perbakin_logged_in') === 'true') {
+  document.addEventListener('DOMContentLoaded', function() {
+    const ls = document.getElementById('login-screen');
+    const al = document.getElementById('admin-layout');
+    if (ls) ls.style.display = 'none';
+    if (al) al.style.display = 'grid';
+  });
+}
 
 function doLogin(e) {
   e.preventDefault();
