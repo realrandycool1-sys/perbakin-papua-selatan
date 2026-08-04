@@ -5,7 +5,7 @@ Website offline statis untuk demo & testing fitur. **Tidak perlu server, hosting
 ## 🚀 Cara Pakai
 
 1. **Buka website**: Double-click `index.html` di folder ini, atau klik kanan → Open with browser.
-2. **Login admin**: Buka `admin.html` atau `login.html`, kredensial lihat pesan dari ketua.
+2. **Login admin**: Buka `admin.html` atau `login.html` (khusus pengurus).
 3. **Coba fitur**: Tambah/edit/hapus berita, klub, pengurus dari admin. Lihat perubahan langsung di website publik.
 
 ## 📁 Struktur File
@@ -42,7 +42,7 @@ perbakin-website/
 - ✅ Form kontak → localStorage
 
 ### Admin Panel
-- ✅ Login admin (kredensial via ketua)
+- ✅ Login khusus pengurus (username + password)
 - ✅ Dashboard dengan 8 statistik
 - ✅ CRUD Berita (tambah, edit, hapus, dengan form lengkap)
 - ✅ CRUD Klub (5 field + filter kabupaten)

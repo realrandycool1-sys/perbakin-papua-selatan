@@ -27,11 +27,11 @@
       </div>
     </div>
     <h2>Login Admin</h2>
-    <p>Hubungi ketua untuk kredensial admin</p>
+    <p>Login khusus pengurus</p>
     <form onsubmit="doLogin(event)">
       <div class="form-group">
         <label>Username</label>
-        <input type="text" class="form-input" id="login-user" value="admin" required autocomplete="username">
+        <input type="text" class="form-input" id="login-user" value="superadmin" required autocomplete="username">
       </div>
       <div class="form-group">
         <label>Password</label>
@@ -84,7 +84,7 @@ function doLogin(e) {
   const user = document.getElementById('login-user').value.trim();
   const pass = document.getElementById('login-pass').value;
 
-  const ADMIN_USER = 'admin';
+  const ADMIN_USER = 'superadmin';
   const ADMIN_PASS = '111';
 
   if (user !== ADMIN_USER || pass !== ADMIN_PASS) {

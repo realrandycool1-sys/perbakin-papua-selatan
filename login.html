@@ -184,7 +184,7 @@
       <form onsubmit="doLogin(event)">
         <div class="form-group">
           <label>Username</label>
-          <input type="text" class="form-input" id="login-user" value="admin" required autocomplete="username">
+          <input type="text" class="form-input" id="login-user" value="superadmin" required autocomplete="username">
         </div>
         <div class="form-group">
           <label>Password</label>
@@ -193,7 +193,7 @@
 
         <div class="form-options">
           <label><input type="checkbox" id="remember" checked> Ingat saya</label>
-          <a href="#" onclick="event.preventDefault();showToast('Hubungi ketua untuk kredensial admin','info')">Lupa password?</a>
+          <a href="#" onclick="event.preventDefault();showToast('Hubungi pengurus utama untuk akses','info')">Butuh bantuan?</a>
         </div>
 
         <button type="submit" class="btn-login" id="btn-login">
@@ -217,7 +217,7 @@ function doLogin(e) {
   }
 
   // Kredensial admin
-  const ADMIN_USER = 'admin';
+  const ADMIN_USER = 'superadmin';
   const ADMIN_PASS = '111';
 
   if (user !== ADMIN_USER || pass !== ADMIN_PASS) {
