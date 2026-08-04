@@ -552,6 +552,25 @@ function formPengumuman(id = null) {
     <div class="modal-body">
       <div class="form-group"><label>Judul *</label><input type="text" class="form-input" id="modal-judul" value="${item.judul || ''}" required></div>
       <div class="form-group"><label>Tanggal *</label><input type="date" class="form-input" id="modal-tanggal" value="${item.tanggal || new Date().toISOString().split('T')[0]}" required></div>
+      <div class="form-group">
+        <label>Gambar / Poster (opsional, maks 2MB)</label>
+        <input type="file" class="form-input" id="modal-gambar" accept="image/*" onchange="previewGambar(this, 'preview-gambar')">
+        <div id="preview-gambar" style="margin-top: 8px; ${item.gambar ? '' : 'display:none;'}">
+          ${item.gambar ? `<img src="${item.gambar}" style="max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid var(--line);">` : ''}
+        </div>
+      </div>
+      <div class="form-group">
+        <label>File PDF (opsional, maks 2MB)</label>
+        <input type="file" class="form-input" id="modal-pdf" accept="application/pdf" onchange="previewPdf(this, 'preview-pdf')">
+        <div id="preview-pdf" style="margin-top: 8px; font-size: 13px; color: var(--ink-mid); ${item.pdf ? '' : 'display:none;'}">
+          ${item.pdf ? `📄 <strong>${item.pdfName || 'File PDF'}</strong> <span style="color: var(--muted);">(tersimpan)</span>` : ''}
+        </div>
+      </div>
+      <p class="text-muted" style="font-size: 12px; margin-top: 8px;">
+        · File disimpan sebagai base64 di browser (tidak upload ke server)<br>
+        · Total localStorage terbatas ~5MB, jangan upload banyak file besar sekaligus<br>
+        · Kosongkan field upload = gunakan file lama (saat edit) atau tidak ada file (saat tambah)
+      </p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Batal</button>
@@ -560,21 +579,102 @@ function formPengumuman(id = null) {
   `);
 }
 
+function previewGambar(input, targetId) {
+  const file = input.files[0];
+  const target = document.getElementById(targetId);
+  if (!file) {
+    target.style.display = 'none';
+    target.innerHTML = '';
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('Ukuran gambar maksimal 2MB!', 'error');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    target.style.display = 'block';
+    target.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid var(--line);">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function previewPdf(input, targetId) {
+  const file = input.files[0];
+  const target = document.getElementById(targetId);
+  if (!file) {
+    target.style.display = 'none';
+    target.innerHTML = '';
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('Ukuran PDF maksimal 2MB!', 'error');
+    input.value = '';
+    return;
+  }
+  target.style.display = 'block';
+  target.innerHTML = `📄 <strong>${file.name}</strong> <span style="color: var(--muted);">(${(file.size/1024).toFixed(1)} KB — siap diupload)</span>`;
+}
+
 function simpanPengumuman(id) {
   const data = {
     judul: document.getElementById('modal-judul').value,
     tanggal: document.getElementById('modal-tanggal').value
   };
   if (!data.judul) { showToast('Lengkapi field!', 'error'); return; }
-  if (id) {
-    updateItem('pengumuman', id, data);
-    showToast('Pengumuman diperbarui!', 'success');
-  } else {
-    addItem('pengumuman', data);
-    showToast('Pengumuman ditambahkan!', 'success');
+
+  // Existing data (untuk edit)
+  const existing = id ? getData('pengumuman').find(p => p.id === id) : null;
+  data.gambar = existing ? existing.gambar : null;
+  data.pdf = existing ? existing.pdf : null;
+  data.pdfName = existing ? existing.pdfName : null;
+
+  const gambarInput = document.getElementById('modal-gambar');
+  const pdfInput = document.getElementById('modal-pdf');
+
+  // Helper: read file as base64
+  function readFileBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
-  closeModal();
-  showPage('pengumuman');
+
+  // Save dengan async handling (FileReader)
+  (async () => {
+    try {
+      if (gambarInput.files[0]) {
+        if (gambarInput.files[0].size > 2 * 1024 * 1024) {
+          showToast('Ukuran gambar maksimal 2MB!', 'error');
+          return;
+        }
+        data.gambar = await readFileBase64(gambarInput.files[0]);
+      }
+      if (pdfInput.files[0]) {
+        if (pdfInput.files[0].size > 2 * 1024 * 1024) {
+          showToast('Ukuran PDF maksimal 2MB!', 'error');
+          return;
+        }
+        data.pdf = await readFileBase64(pdfInput.files[0]);
+        data.pdfName = pdfInput.files[0].name;
+      }
+
+      if (id) {
+        updateItem('pengumuman', id, data);
+        showToast('Pengumuman diperbarui!', 'success');
+      } else {
+        addItem('pengumuman', data);
+        showToast('Pengumuman ditambahkan!', 'success');
+      }
+      closeModal();
+      showPage('pengumuman');
+    } catch (err) {
+      showToast('Gagal membaca file: ' + err.message, 'error');
+    }
+  })();
 }
 
 // GALERI ADMIN
